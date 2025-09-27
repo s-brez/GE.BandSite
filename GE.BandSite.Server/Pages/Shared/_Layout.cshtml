@@ -1,0 +1,67 @@
+@{
+    var currentPage = (string?)ViewContext.RouteData.Values["page"] ?? string.Empty;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Swing The Boogie brings world-class swing energy to corporate events, weddings, and premium celebrations." />
+    <title>@ViewData["Title"] - Swing The Boogie</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="site-body">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="brand" asp-page="/Index" aria-label="Swing The Boogie home">
+                <span class="brand__title">Swing The Boogie</span>
+                <span class="brand__subtitle">Vintage swing. Modern energy.</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
+                <span class="nav-toggle__icon" aria-hidden="true"></span>
+                <span class="nav-toggle__label">Menu</span>
+            </button>
+            <nav id="primary-navigation" class="site-nav" data-active-page="@currentPage">
+                <a class="nav-link" data-target="/Index" asp-page="/Index">Home</a>
+                <a class="nav-link" data-target="/About/Index" asp-page="/About/Index">About</a>
+                <a class="nav-link" data-target="/Band/Index" asp-page="/Band/Index">Band</a>
+                <a class="nav-link" data-target="/Services/Index" asp-page="/Services/Index">Services</a>
+                <a class="nav-link" data-target="/Media/Index" asp-page="/Media/Index">Media</a>
+                <a class="nav-link" data-target="/Testimonials/Index" asp-page="/Testimonials/Index">Testimonials</a>
+                <a class="nav-link" data-target="/Events/Index" asp-page="/Events/Index">Events</a>
+                <a class="nav-link" data-target="/Contact/Index" asp-page="/Contact/Index">Contact</a>
+            </nav>
+            <a class="header-cta" href="/Contact">Book Your Event</a>
+        </div>
+    </header>
+    <main id="main-content" class="site-main" role="main">
+        @RenderBody()
+    </main>
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div class="site-footer__brand">
+                <span class="site-footer__title">Swing The Boogie – The heartbeat of your event.</span>
+                <p class="site-footer__copy">Gilbert Ernest leads a flexible 1–10 piece swing band lighting up celebrations worldwide.</p>
+            </div>
+            <div class="site-footer__links">
+                <span class="site-footer__label">Explore</span>
+                <a class="site-footer__link" href="/">Home</a>
+                <a class="site-footer__link" href="/About">About</a>
+                <a class="site-footer__link" href="/Services">Services</a>
+                <a class="site-footer__link" href="/Media">Media</a>
+                <a class="site-footer__link" href="/Contact">Contact</a>
+            </div>
+            <div class="site-footer__social">
+                <span class="site-footer__label">Connect</span>
+                <a class="site-footer__link" href="https://www.instagram.com" target="_blank" rel="noopener">Instagram</a>
+                <a class="site-footer__link" href="https://www.youtube.com" target="_blank" rel="noopener">YouTube</a>
+                <a class="site-footer__link" href="https://www.linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
+            </div>
+        </div>
+        <p class="site-footer__legal">&copy; @DateTime.UtcNow.Year Swing The Boogie. All rights reserved.</p>
+    </footer>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

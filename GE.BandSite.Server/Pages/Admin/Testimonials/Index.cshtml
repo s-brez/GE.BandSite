@@ -1,0 +1,76 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.Testimonials.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Manage Testimonials";
+}
+
+<section>
+    <h1>Testimonials</h1>
+    <p>Maintain published feedback for the testimonials page.</p>
+</section>
+
+<section class="admin-form">
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" asp-for="Input.Id" />
+        <div class="form-field form-field--full">
+            <label asp-for="Input.Quote"></label>
+            <textarea asp-for="Input.Quote" rows="4"></textarea>
+            <span class="validation-message" asp-validation-for="Input.Quote"></span>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.Name"></label>
+            <input asp-for="Input.Name" />
+            <span class="validation-message" asp-validation-for="Input.Name"></span>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.Role"></label>
+            <input asp-for="Input.Role" />
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.DisplayOrder"></label>
+            <input asp-for="Input.DisplayOrder" type="number" />
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.IsPublished"></label>
+            <input asp-for="Input.IsPublished" type="checkbox" />
+        </div>
+        <button type="submit" class="button button--primary">Save Testimonial</button>
+    </form>
+</section>
+
+<section>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Quote</th>
+                <th>Name</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var testimonial in Model.Testimonials)
+        {
+            <tr>
+                <td>@testimonial.Quote</td>
+                <td>@testimonial.Name<br /><small>@testimonial.Role</small></td>
+                <td>@testimonial.DisplayOrder</td>
+                <td>@(testimonial.IsPublished ? "Published" : "Hidden")</td>
+                <td class="admin-table__actions">
+                    <a asp-page-handler="Edit" asp-route-id="@testimonial.Id">Edit</a>
+                    <form method="post" asp-page-handler="Delete" class="inline-form">
+                        <input type="hidden" name="id" value="@testimonial.Id" />
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

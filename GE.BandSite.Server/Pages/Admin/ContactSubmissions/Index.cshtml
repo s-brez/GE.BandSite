@@ -1,0 +1,73 @@
+@page
+@using NodaTime.Extensions
+@model GE.BandSite.Server.Pages.Admin.ContactSubmissions.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Contact Submissions";
+}
+
+<section class="admin-contact">
+    <h1>Contact Submissions</h1>
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="admin-contact__status">@Model.StatusMessage</div>
+    }
+
+    @if (Model.Submissions.Count == 0)
+    {
+        <p>No submissions yet.</p>
+    }
+    else
+    {
+        <table class="admin-contact__table">
+            <thead>
+                <tr>
+                    <th>Submitted</th>
+                    <th>Organizer</th>
+                    <th>Event</th>
+                    <th>Logistics</th>
+                    <th>Message</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var submission in Model.Submissions)
+            {
+                <tr>
+                    <td>@submission.CreatedAt.ToDateTimeUtc().ToLocalTime().ToString("g")</td>
+                    <td>
+                        <div>@submission.OrganizerName</div>
+                        <div><a href="mailto:@submission.OrganizerEmail">@submission.OrganizerEmail</a></div>
+                        @if (!string.IsNullOrWhiteSpace(submission.OrganizerPhone))
+                        {
+                            <div><a href="tel:@submission.OrganizerPhone">@submission.OrganizerPhone</a></div>
+                        }
+                    </td>
+                    <td>
+                        <div>@submission.EventType</div>
+                        @if (submission.EventDate is not null)
+                        {
+                            <div>@submission.EventDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</div>
+                        }
+                        <div>@submission.PreferredBandSize</div>
+                    </td>
+                    <td>
+                        <div>@submission.BudgetRange</div>
+                        @if (!string.IsNullOrWhiteSpace(submission.Location))
+                        {
+                            <div>@submission.Location</div>
+                        }
+                    </td>
+                    <td class="admin-contact__message">@submission.Message</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete">
+                            <input type="hidden" name="submissionId" value="@submission.SubmissionId" />
+                            <button type="submit" class="admin-contact__delete">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

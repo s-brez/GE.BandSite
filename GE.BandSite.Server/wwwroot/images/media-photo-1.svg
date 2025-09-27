@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="photo1Title photo1Desc">
+  <title id="photo1Title">Corporate gala spotlight</title>
+  <desc id="photo1Desc">Stylized silhouettes of horn players against art deco lighting.</desc>
+  <defs>
+    <linearGradient id="photoGradient1" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d7263d" />
+      <stop offset="100%" stop-color="#2a1b40" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#photoGradient1)" />
+  <g fill="#f5f5f5" opacity="0.8">
+    <path d="M80 520 Q140 340 100 200 L160 160 L220 360 Q200 480 140 560 Z" />
+    <path d="M240 540 Q300 360 260 200 L340 180 L420 380 Q400 500 320 580 Z" />
+    <path d="M420 520 Q480 340 440 200 L520 160 L580 360 Q560 480 500 560 Z" />
+  </g>
+</svg>

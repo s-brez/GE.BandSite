@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="posterTitle posterDesc">
+  <title id="posterTitle">Swing The Boogie highlight reel poster</title>
+  <desc id="posterDesc">Abstract depiction of a vibrant stage with a centered play icon.</desc>
+  <defs>
+    <radialGradient id="posterGradient" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0%" stop-color="#d7263d" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#050505" stop-opacity="0.95" />
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#posterGradient)" />
+  <circle cx="640" cy="360" r="220" fill="rgba(5,5,5,0.6)" stroke="#f5f5f5" stroke-width="6" />
+  <polygon points="580,260 780,360 580,460" fill="#f5f5f5" />
+  <g stroke="#f5f5f5" stroke-width="8" stroke-dasharray="14 24" opacity="0.5">
+    <line x1="240" y1="160" x2="1040" y2="560" />
+    <line x1="1040" y1="160" x2="240" y2="560" />
+  </g>
+</svg>

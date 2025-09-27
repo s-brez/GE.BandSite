@@ -1,0 +1,18 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<section>
+    <h1>Dashboard</h1>
+    <p>Manage Swing The Boogie content from a single hub.</p>
+    <ul class="admin-dashboard-links">
+        <li><a asp-page="/Admin/Band/Index">Band lineup</a></li>
+        <li><a asp-page="/Admin/Testimonials/Index">Testimonials</a></li>
+        <li><a asp-page="/Admin/Events/Index">Events</a></li>
+        <li><a asp-page="/Admin/Media/Index">Media library</a></li>
+        <li><a asp-page="/Admin/ContactSubmissions/Index">Contact submissions</a></li>
+    </ul>
+</section>

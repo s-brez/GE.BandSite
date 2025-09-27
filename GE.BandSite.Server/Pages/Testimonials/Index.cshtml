@@ -1,0 +1,33 @@
+@page
+@model GE.BandSite.Server.Pages.Testimonials.IndexModel
+@{
+    ViewData["Title"] = "Testimonials";
+}
+
+<div class="page">
+    <section class="page__section testimonials-hero">
+        <p class="page-eyebrow">Testimonials</p>
+        <h1 class="page-title">@Model.HeroTitle</h1>
+        <p class="page-lead">@Model.HeroLead</p>
+    </section>
+
+    <section class="page__section testimonials-grid">
+        <div class="testimonials-grid__list">
+            @foreach (var testimonial in Model.Testimonials)
+            {
+                <article class="testimonial-card">
+                    <blockquote>
+                        <p>“@testimonial.Quote”</p>
+                    </blockquote>
+                    <footer>
+                        <span class="testimonial-card__name">@testimonial.Name</span>
+                        @if (!string.IsNullOrWhiteSpace(testimonial.Role))
+                        {
+                            <span class="testimonial-card__role">@testimonial.Role</span>
+                        }
+                    </footer>
+                </article>
+            }
+        </div>
+    </section>
+</div>

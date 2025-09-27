@@ -1,0 +1,37 @@
+@{
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+    var navItems = new[]
+    {
+        new { Title = "Dashboard", Url = Url.Page("/Admin/Index"), Route = "/Admin/Index" },
+        new { Title = "Band", Url = Url.Page("/Admin/Band/Index"), Route = "/Admin/Band/Index" },
+        new { Title = "Testimonials", Url = Url.Page("/Admin/Testimonials/Index"), Route = "/Admin/Testimonials/Index" },
+        new { Title = "Events", Url = Url.Page("/Admin/Events/Index"), Route = "/Admin/Events/Index" },
+        new { Title = "Media", Url = Url.Page("/Admin/Media/Index"), Route = "/Admin/Media/Index" },
+        new { Title = "Contact", Url = Url.Page("/Admin/ContactSubmissions/Index"), Route = "/Admin/ContactSubmissions/Index" },
+    };
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+}
+
+<section class="admin-shell">
+    <aside class="admin-shell__nav">
+        <h1 class="admin-shell__brand">Swing The Boogie Admin</h1>
+        <nav>
+            <ul>
+                @foreach (var item in navItems)
+                {
+                    var isActive = string.Equals(item.Route, currentPage, StringComparison.OrdinalIgnoreCase);
+                    <li>
+                        <a class="@(isActive ? "active" : string.Empty)" href="@item.Url">@item.Title</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </aside>
+    <main class="admin-shell__content">
+        @RenderBody()
+    </main>
+</section>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

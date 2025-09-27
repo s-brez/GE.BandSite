@@ -1,0 +1,117 @@
+@page
+@model GE.BandSite.Server.Pages.Contact.IndexModel
+@{
+    ViewData["Title"] = "Contact";
+}
+
+<div class="page">
+    <section class="page__section contact-hero">
+        <div class="contact-hero__copy">
+            <p class="page-eyebrow">Bookings</p>
+            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-lead">@Model.HeroLead</p>
+        </div>
+        <div class="contact-hero__manager">
+            <span class="contact-hero__label">Direct enquiries</span>
+            <p class="contact-hero__name">@Model.Manager.Name</p>
+            <p class="contact-hero__title">@Model.Manager.Title</p>
+            <a href="mailto:@Model.Manager.Email">@Model.Manager.Email</a>
+            <a href="tel:@Model.Manager.PhoneDial">@Model.Manager.PhoneDisplay</a>
+        </div>
+    </section>
+
+    <section class="page__section contact-form">
+        <div class="contact-form__intro">
+            <h2 class="section-heading__title">Tell us about your event</h2>
+            <p class="section-heading__lead">Share the essentials and we&apos;ll tailor a line-up, repertoire, and production plan specifically for your celebration.</p>
+            <div class="contact-form__status">@Model.ResponseCommitment</div>
+            @if (Model.SubmissionSucceeded)
+            {
+                <div class="contact-form__success" role="status">@Model.SubmissionMessage</div>
+            }
+        </div>
+        <form class="contact-form__fields" method="post" asp-antiforgery="true">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+            <div class="form-field">
+                <label asp-for="Input.OrganizerName"></label>
+                <input asp-for="Input.OrganizerName" />
+                <span class="validation-message" asp-validation-for="Input.OrganizerName"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.OrganizerEmail"></label>
+                <input asp-for="Input.OrganizerEmail" />
+                <span class="validation-message" asp-validation-for="Input.OrganizerEmail"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.OrganizerPhone"></label>
+                <input asp-for="Input.OrganizerPhone" />
+                <span class="validation-message" asp-validation-for="Input.OrganizerPhone"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.EventType"></label>
+                <select asp-for="Input.EventType">
+                    <option value="">Select an event type</option>
+                    @foreach (var option in Model.FormDefinition.EventTypes)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+                <span class="validation-message" asp-validation-for="Input.EventType"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.EventDate"></label>
+                <input asp-for="Input.EventDate" />
+                <span class="validation-message" asp-validation-for="Input.EventDate"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.Location"></label>
+                <input asp-for="Input.Location" placeholder="City / Venue" />
+                <span class="validation-message" asp-validation-for="Input.Location"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.PreferredBandSize"></label>
+                <select asp-for="Input.PreferredBandSize">
+                    <option value="">Select lineup</option>
+                    @foreach (var option in Model.FormDefinition.BandSizes)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+                <span class="validation-message" asp-validation-for="Input.PreferredBandSize"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.BudgetRange"></label>
+                <select asp-for="Input.BudgetRange">
+                    <option value="">Select range</option>
+                    @foreach (var option in Model.FormDefinition.BudgetRanges)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+                <span class="validation-message" asp-validation-for="Input.BudgetRange"></span>
+            </div>
+            <div class="form-field form-field--full">
+                <label asp-for="Input.Message"></label>
+                <textarea asp-for="Input.Message" rows="4" placeholder="Share run-sheet goals, special songs, or production notes"></textarea>
+                <span class="validation-message" asp-validation-for="Input.Message"></span>
+            </div>
+            <button type="submit" class="button button--primary">Book Your Event</button>
+        </form>
+    </section>
+
+    <section class="page__section contact-faq">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Quick answers</h2>
+            <p class="section-heading__lead">Planning teams partner with us for our flexibility and concierge-style communication.</p>
+        </div>
+        <div class="contact-faq__grid">
+            @foreach (var faq in Model.FaqEntries)
+            {
+                <article class="faq-card">
+                    <h3>@faq.Question</h3>
+                    <p>@faq.Answer</p>
+                </article>
+            }
+        </div>
+    </section>
+</div>

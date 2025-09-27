@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="videoAltTitle videoAltDesc">
+  <title id="videoAltTitle">Festival horn drop</title>
+  <desc id="videoAltDesc">Graphic poster featuring horn section silhouettes and spotlight beams.</desc>
+  <defs>
+    <radialGradient id="videoAltGradient" cx="0.5" cy="0.5" r="0.8">
+      <stop offset="0%" stop-color="#d7263d" />
+      <stop offset="100%" stop-color="#050505" />
+    </radialGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#videoAltGradient)" />
+  <polygon points="260,120 420,180 260,240" fill="#f5f5f5" opacity="0.9" />
+  <g stroke="#f5f5f5" stroke-dasharray="8 16" stroke-width="6" opacity="0.6">
+    <line x1="120" y1="80" x2="520" y2="80" />
+    <line x1="140" y1="300" x2="500" y2="260" />
+  </g>
+</svg>

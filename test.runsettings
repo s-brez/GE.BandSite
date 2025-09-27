@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <MaxCpuCount>4</MaxCpuCount>
+    <EnvironmentVariables>
+      <Testing__DisableBackgroundJobs>true</Testing__DisableBackgroundJobs>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

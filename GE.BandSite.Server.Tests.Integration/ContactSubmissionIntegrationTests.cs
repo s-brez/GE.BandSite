@@ -1,0 +1,158 @@
+using System.Net;
+using System.Text.RegularExpressions;
+using GE.BandSite.Database;
+using GE.BandSite.Server.Features.Contact;
+using GE.BandSite.Testing.Core;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using NodaTime;
+
+namespace GE.BandSite.Server.Tests.Integration;
+
+[TestFixture]
+[NonParallelizable]
+public class ContactSubmissionIntegrationTests
+{
+    private TestPostgresProvider _postgres = null!;
+    private ContactWebApplicationFactory _factory = null!;
+    private HttpClient _client = null!;
+
+    [SetUp]
+    public async Task SetUp()
+    {
+        _postgres = new TestPostgresProvider();
+        await _postgres.InitializeAsync();
+
+        _factory = new ContactWebApplicationFactory(_postgres);
+        _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
+        await db.Database.EnsureCreatedAsync();
+    }
+
+    [TearDown]
+    public async Task TearDown()
+    {
+        if (_client != null)
+        {
+            _client.Dispose();
+        }
+
+        if (_factory != null)
+        {
+            _factory.Dispose();
+        }
+
+        if (_postgres != null)
+        {
+            await _postgres.DisposeAsync();
+        }
+    }
+
+    [Test]
+    public async Task PostContactForm_PersistsSubmissionAndSendsNotification()
+    {
+        var token = await FetchAntiforgeryTokenAsync();
+
+        var form = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["Input.OrganizerName"] = "Jordan Hart",
+            ["Input.OrganizerEmail"] = "jordan@example.com",
+            ["Input.OrganizerPhone"] = "+13125550191",
+            ["Input.EventType"] = "Corporate Event",
+            ["Input.EventDate"] = DateTime.UtcNow.AddDays(45).ToString("yyyy-MM-dd"),
+            ["Input.Location"] = "Chicago, IL",
+            ["Input.PreferredBandSize"] = "10-Piece",
+            ["Input.BudgetRange"] = "$40k+",
+            ["Input.Message"] = "Need horn feature for award reveal."
+        };
+
+        var response = await _client.PostAsync("/Contact", new FormUrlEncodedContent(form));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Redirect));
+        Assert.That(response.Headers.Location?.OriginalString, Is.EqualTo("/Contact"));
+
+        await using var db = _postgres.CreateDbContext<GeBandSiteDbContext>();
+        var stored = await db.ContactSubmissions.SingleAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(stored.OrganizerEmail, Is.EqualTo("jordan@example.com"));
+            Assert.That(stored.EventType, Is.EqualTo("Corporate Event"));
+        });
+
+        Assert.That(_factory.Notifier.Notifications.Count, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GetAdminContactSubmissions_WithoutAuth_RedirectsToLogin()
+    {
+        var response = await _client.GetAsync("/Admin/ContactSubmissions");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Redirect));
+            Assert.That(response.Headers.Location?.OriginalString, Is.EqualTo("/Login"));
+        });
+    }
+
+    private async Task<string> FetchAntiforgeryTokenAsync()
+    {
+        var response = await _client.GetAsync("/Contact");
+        response.EnsureSuccessStatusCode();
+        var html = await response.Content.ReadAsStringAsync();
+        var match = Regex.Match(html, "<input[^>]*name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+        if (!match.Success)
+        {
+            throw new InvalidOperationException("Antiforgery token not found in contact page.");
+        }
+
+        return match.Groups[1].Value;
+    }
+
+    private sealed class ContactWebApplicationFactory : WebApplicationFactory<Program>
+    {
+        private readonly TestPostgresProvider _postgres;
+
+        public ContactWebApplicationFactory(TestPostgresProvider postgres)
+        {
+            _postgres = postgres;
+            Notifier = new TestNotifier();
+        }
+
+        public TestNotifier Notifier { get; }
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll(typeof(DbContextOptions<GeBandSiteDbContext>));
+                services.AddDbContext<GeBandSiteDbContext>(options =>
+                    options.UseNpgsql(_postgres.ConnectionString, o => o.UseNodaTime()));
+                services.AddScoped<IGeBandSiteDbContext>(sp => sp.GetRequiredService<GeBandSiteDbContext>());
+
+                services.RemoveAll(typeof(IContactSubmissionNotifier));
+                services.AddSingleton<IContactSubmissionNotifier>(Notifier);
+                services.PostConfigure<ContactNotificationOptions>(options => options.Enabled = false);
+            });
+        }
+    }
+
+    private sealed class TestNotifier : IContactSubmissionNotifier
+    {
+        public List<ContactSubmissionNotification> Notifications { get; } = new();
+
+        public Task NotifyAsync(ContactSubmissionNotification notification, CancellationToken cancellationToken = default)
+        {
+            Notifications.Add(notification);
+            return Task.CompletedTask;
+        }
+    }
+}

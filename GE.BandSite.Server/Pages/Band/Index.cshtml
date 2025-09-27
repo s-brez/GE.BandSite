@@ -1,0 +1,59 @@
+@page
+@model GE.BandSite.Server.Pages.Band.IndexModel
+@{
+    ViewData["Title"] = "Band";
+}
+
+<div class="page">
+    <section class="page__section band-hero">
+        <div class="band-hero__copy">
+            <p class="page-eyebrow">Lineup</p>
+            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-lead">@Model.HeroLead</p>
+        </div>
+        <div class="band-hero__configurations">
+            <h2 class="band-hero__heading">Choose your band size</h2>
+            <ul class="band-configurations">
+                @foreach (var configuration in Model.Configurations)
+                {
+                    <li class="band-configurations__item">
+                        <span class="band-configurations__name">@configuration.Name</span>
+                        <p class="band-configurations__description">@configuration.Description</p>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="page__section band-grid">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Featured musicians</h2>
+            <p class="section-heading__lead">Ten artists who can scale from lounge elegance to roaring big band swagger.</p>
+        </div>
+        <div class="band-grid__members">
+            @foreach (var member in Model.BandMembers)
+            {
+                <article class="profile-card">
+                    <header class="profile-card__header">
+                        <span class="profile-card__role">@member.Role</span>
+                        <h3 class="profile-card__name">@member.Name</h3>
+                    </header>
+                    <p class="profile-card__spotlight">@member.Spotlight</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="page__section band-highlights">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Global stages, consistent sparkle</h2>
+            <p class="section-heading__lead">Our musicians arrive rehearsal-ready with charts, stems, and curated wardrobe packs.</p>
+        </div>
+        <ul class="band-highlights__list">
+            @foreach (var highlight in Model.TouringHighlights)
+            {
+                <li>@highlight</li>
+            }
+        </ul>
+    </section>
+</div>

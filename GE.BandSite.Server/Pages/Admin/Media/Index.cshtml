@@ -1,0 +1,125 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.Media.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Media Library";
+}
+
+<section>
+    <h1>Media Library</h1>
+    <p>Review media assets, publish to the public gallery, and requeue video processing when needed.</p>
+</section>
+
+<section class="admin-form">
+    <h2>Upload New Asset</h2>
+    <form id="media-upload-form">
+        <div class="form-field">
+            <label for="asset-type">Asset Type</label>
+            <select id="asset-type" name="asset-type">
+                <option value="photo">Photo</option>
+                <option value="video">Video</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="asset-title">Title</label>
+            <input id="asset-title" name="title" required />
+        </div>
+        <div class="form-field form-field--full">
+            <label for="asset-description">Description</label>
+            <textarea id="asset-description" name="description" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+            <label for="asset-display-order">Display Order</label>
+            <input id="asset-display-order" name="display-order" type="number" value="0" />
+        </div>
+        <div class="form-field">
+            <label>
+                <input type="checkbox" id="asset-featured" name="is-featured" /> Feature on Media
+            </label>
+        </div>
+        <div class="form-field">
+            <label>
+                <input type="checkbox" id="asset-home" name="show-on-home" /> Show on Home Page
+            </label>
+        </div>
+        <div class="form-field">
+            <label>
+                <input type="checkbox" id="asset-published" name="is-published" checked /> Published
+            </label>
+        </div>
+        <div class="form-field">
+            <label for="asset-file">Media File</label>
+            <input id="asset-file" name="asset-file" type="file" accept="image/*" required />
+        </div>
+        <div class="form-field" data-role="poster-field" hidden>
+            <label for="asset-poster">Poster Image (optional)</label>
+            <input id="asset-poster" name="asset-poster" type="file" accept="image/*" />
+        </div>
+        <div class="form-status" id="media-upload-status" aria-live="polite"></div>
+        <button type="submit" class="button button--primary">Upload Asset</button>
+    </form>
+</section>
+
+<section>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Featured</th>
+                <th>Processing</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var asset in Model.MediaAssets)
+        {
+            <tr>
+                <td>
+                    <div>@asset.Title</div>
+                    <div><small>@asset.Description</small></div>
+                </td>
+                <td>@asset.AssetType</td>
+                <td>
+                    <form method="post" asp-page-handler="Update" class="inline-form">
+                        <input type="hidden" name="id" value="@asset.Id" />
+                        <input type="hidden" name="showOnHome" value="@asset.ShowOnHome" />
+                        <label>
+                            <input type="checkbox" name="isPublished" value="true" @(asset.IsPublished ? "checked" : string.Empty) onchange="this.form.submit()" /> Publish
+                        </label>
+                    </form>
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Update" class="inline-form">
+                        <input type="hidden" name="id" value="@asset.Id" />
+                        <input type="hidden" name="isPublished" value="@asset.IsPublished" />
+                        <label>
+                            <input type="checkbox" name="showOnHome" value="true" @(asset.ShowOnHome ? "checked" : string.Empty) onchange="this.form.submit()" /> Home Feature
+                        </label>
+                    </form>
+                </td>
+                <td>
+                    <div>@asset.ProcessingState</div>
+                    @if (!string.IsNullOrWhiteSpace(asset.ProcessingError))
+                    {
+                        <div><small>@asset.ProcessingError</small></div>
+                    }
+                    @if (asset.ProcessingState != GE.BandSite.Database.Media.MediaProcessingState.Ready)
+                    {
+                        <form method="post" asp-page-handler="Reprocess" class="inline-form">
+                            <input type="hidden" name="id" value="@asset.Id" />
+                            <button type="submit">Requeue</button>
+                        </form>
+                    }
+                </td>
+                <td>@asset.DisplayOrder</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+@section Scripts {
+    <script src="~/js/admin-media.js"></script>
+}

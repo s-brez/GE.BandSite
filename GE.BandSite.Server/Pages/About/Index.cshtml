@@ -1,0 +1,62 @@
+@page
+@model GE.BandSite.Server.Pages.About.IndexModel
+@{
+    ViewData["Title"] = "About";
+}
+
+<div class="page">
+    <section class="page__section about-hero">
+        <div class="about-hero__copy">
+            <p class="page-eyebrow">Our Story</p>
+            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-lead">@Model.HeroSubtitle</p>
+        </div>
+        <div class="about-hero__facts">
+            @foreach (var fact in Model.SpotlightFacts)
+            {
+                <article class="fact-card">
+                    <span class="fact-card__heading">@fact.Heading</span>
+                    <span class="fact-card__detail">@fact.Detail</span>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="page__section about-story">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Gilbert Ernest leads a world-touring swing collective</h2>
+            <p class="section-heading__lead">@Model.HeroSubtitle</p>
+        </div>
+        <div class="about-story__grid">
+            <div class="about-story__narrative">
+                @foreach (var paragraph in Model.StoryParagraphs)
+                {
+                    <p>@paragraph</p>
+                }
+            </div>
+            <div class="about-story__gallery">
+                @foreach (var image in Model.ShowcaseImages)
+                {
+                    <figure class="about-story__image">
+                        <img src="@image.Path" alt="@image.AltText" />
+                    </figure>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="page__section about-highlights">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Why choose Swing The Boogie</h2>
+            <p class="section-heading__lead">The band blends vintage authenticity with the polish today’s audiences expect.</p>
+        </div>
+        <div class="about-highlights__list">
+            @foreach (var point in Model.WhyChooseUsPoints)
+            {
+                <article class="highlight-card">
+                    <p>@point</p>
+                </article>
+            }
+        </div>
+    </section>
+</div>

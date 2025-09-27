@@ -1,0 +1,116 @@
+# Implementation Plan
+
+- [x] Stage 1: Site Shell & Home Demo
+  - **Scope**
+    - Replace the scaffolded layout/home page with the Swing The Boogie experience described in `docs/client-requirements.md`.
+    - Establish navigation/footer links, hero section, and value snapshots so the marketing team can demo a polished landing page quickly.
+    - Use existing sample assets (local or S3 URLs) to showcase imagery/video; wire the CTA to the upcoming Contact page route.
+  - **Key Files**
+    - `GE.BandSite.Server/Pages/Shared/_Layout.cshtml` – overwrite placeholder markup with header/nav/footer.
+    - `GE.BandSite.Server/Pages/Index.cshtml` & code-behind – replace the default template text with hero/value snapshot sections and CTA button.
+    - `GE.BandSite.Server/wwwroot/css/site.css` – implement the black base + red accent palette, typography, and responsive grid.
+    - Remove scaffolded privacy link/placeholder content to avoid regressions later.
+  - **UI Outputs**
+    - Desktop/mobile header with nav: Home, About, Services, Media, Contact (links may 404 until Stage 2, but routes must be added).
+    - Hero containing full-width band image, tagline “The world-class swing band bringing the vibe to your event,” supporting copy, and `Book Your Event` button.
+    - Value snapshot row covering corporate events, weddings, band flexibility, international experience.
+    - Highlight video section (placeholder `<video>` or still image with play button) referencing future gallery.
+  - **Infrastructure**
+    - Ensure static assets are served locally but keep references easily swappable for S3/CloudFront.
+    - Wire nav links to the expected Razor Page routes (even if not yet implemented) so hash-based highlighting works once pages exist.
+  - **Testing**
+    - Unit: add a simple view-model/page-model test ensuring title + CTA text values.
+    - Manual: Validate responsive breakpoints (320, 768, 1440) and verify nav/footer/hardcoded links render correctly.
+  - **Acceptance Criteria**
+    - Home page renders without errors, uses brand palette, contains hero/value snapshot/video sections, and CTA button works.
+    - Layout can be reused by later pages; no leftover template/placeholder artifacts remain.
+
+- [x] Stage 2: Public Pages Read-Only
+  - **Scope**
+    - Implement About, Band Lineup, Services, Media, Testimonials, Events, Contact pages as Razor Pages consuming in-memory view models (no DB yet).
+    - Apply copy from `docs/client-requirements.md`; ensure navigation highlights active page.
+  - **Key Files**
+    - Create `Pages/About/Index.cshtml(.cs)`, `Pages/Band`, `Pages/Services`, `Pages/Media`, `Pages/Testimonials`, `Pages/Events`, `Pages/Contact`.
+    - Shared partials (e.g., `_SectionHeader`, `_TestimonialCard`) if repeated structures emerge.
+  - **UI Outputs**
+    - Each page reflects the brief: timeline/story, lineup tiles, service packages, gallery placeholders, testimonial quotes, events list, contact form stub.
+  - **Infrastructure**
+    - Source view data from constants/records so transition to EF in later stages is isolated.
+  - **Testing**
+    - Unit tests verifying page models provide expected counts/strings.
+    - Manual navigation sweep – all routes reachable with back/forward.
+  - **Acceptance Criteria**
+    - All public routes exist, display copy/imagery placeholders, and share consistent styling.
+
+- [x] Stage 3: Contact Pipeline
+  - **Scope**
+    - Activate the Contact form: validation, persist submissions to PostgreSQL, send SES notifications, expose admin-only listing.
+  - **Key Files**
+    - Contact page model (`Pages/Contact/Index.cshtml.cs`) – hook into new service.
+    - `GE.BandSite.Server/Features/Contact/ContactSubmissionService.cs`, DTOs, and DI registration.
+    - `GE.BandSite.Database/Entities/ContactSubmission.cs` + context wiring.
+    - Admin Razor Pages under `Pages/Admin/ContactSubmissions` for listing/deletion.
+  - **Testing**
+    - Unit: service persistence/validation/email builder.
+    - Integration: POST `/Contact` stores record; admin list requires auth.
+  - **Acceptance Criteria**
+    - Valid submissions store data + email via SES; errors return user-friendly validation messages.
+    - Admin listing shows entries and supports deletion.
+
+- [x] Stage 4: Media Storage & Delivery
+  - **Scope**
+    - Introduce media entities/services; have public Home/Media pages read from PostgreSQL instead of hardcoded data; serve assets from CloudFront OAC URLs.
+  - **Key Files**
+    - `MediaAsset`/`MediaTag` entities, DbContext configuration, query service (`IMediaQueryService`).
+    - Update Home/Media Razor Pages to consume the service.
+  - **Testing**
+    - Unit tests for query service filtering logic.
+    - Integration test ensuring `/Media` returns CloudFront URLs.
+  - **Acceptance Criteria**
+    - Public pages display data exclusively from DB; no inline media definitions remain.
+
+- [x] Stage 5: Video Processing Backbone
+  - **Scope**
+    - Implement hosted service that processes pending video assets (ffmpeg MOV→MP4), writes metadata, and updates status.
+  - **Key Files**
+    - Background service (`MediaProcessingHostedService`), queue/transcoder abstractions, configuration (`MediaProcessingOptions`).
+  - **Testing**
+    - Unit tests for queue selection, ffmpeg command generation (via abstraction), metadata updates.
+    - Integration test stubbing S3/ffmpeg to verify state transitions.
+  - **Acceptance Criteria**
+    - Pending videos move to Ready state with playback keys; failures mark error details.
+
+- [x] Stage 6: Authentication & Admin Portal
+  - **Scope**
+    - Leverage existing auth stack (login service, JWT middleware) to build admin layout and CRUD Razor Pages for testimonials/events/band/media metadata/contact submissions.
+  - **Key Files**
+    - `Pages/Admin/*` Razor Pages + layout.
+    - Services for testimonials/events/band metadata.
+  - **Testing**
+    - Unit tests for CRUD services/page handlers and authentication flows.
+    - Integration tests covering login, session persistence, access control.
+  - **Acceptance Criteria**
+    - Admin users can log in/out, navigate admin dashboard, edit datasets; all admin routes secured.
+
+- [x] Stage 7: Media Upload Interface
+  - **Scope**
+    - Extend admin media pages with presigned S3 uploads for photos/videos/posters, update metadata, trigger Stage 5 processing.
+  - **Key Files**
+    - Upload service generating presigned URLs, admin JS, status indicators.
+  - **Testing**
+    - Unit: upload service & command handlers.
+    - Integration: simulate upload + metadata update -> processing pipeline marks ready.
+  - **Acceptance Criteria**
+    - Staff can upload/manage media end-to-end; processing status visible; publish/unpublish toggles reflect on public site.
+
+- [x] Stage 8: Operations Hardening
+  - **Scope**
+    - Deliver nightly `pg_dump` backups to S3 with 30-day retention; configure Serilog retention; document deployment/rollback/backups/ffmpeg/SES.
+  - **Key Files**
+    - Backup hosted service/config, runbook in `docs/operations-runbook.md`.
+  - **Testing**
+    - Unit: backup scheduling logic, options validation.
+    - Integration: dry-run backup job with stubbed pg_dump/S3.
+    - Manual: run backup in staging, verify S3 object & retention, exercise runbook steps, confirm CloudFront/Route 53/SES checks.
+  - **Acceptance Criteria**
+    - Backup job runs, enforces retention, and is documented; log retention configured; ops runbook complete; manual validation recorded.

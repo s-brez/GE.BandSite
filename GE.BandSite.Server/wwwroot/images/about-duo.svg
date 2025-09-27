@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="duoTitle duoDesc">
+  <title id="duoTitle">Gilbert Ernest and vocalist in a lounge performance</title>
+  <desc id="duoDesc">Stylized silhouettes of a pianist and vocalist sharing a spotlight with art deco accents.</desc>
+  <defs>
+    <radialGradient id="spotlight" cx="0.5" cy="0.2" r="0.8">
+      <stop offset="0%" stop-color="#f4b942" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#050505" stop-opacity="0.95" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#050505" />
+  <rect x="120" y="120" width="960" height="560" rx="48" fill="url(#spotlight)" />
+  <g fill="#f5f5f5" opacity="0.3">
+    <path d="M160 220 H1040 V240 H160z" />
+    <path d="M160 270 H1040 V290 H160z" />
+    <path d="M160 320 H1040 V340 H160z" />
+  </g>
+  <g fill="#f5f5f5" opacity="0.85">
+    <path d="M320 620 Q360 420 330 280 L410 240 L480 420 Q460 560 400 720 Z" />
+    <path d="M540 640 Q590 460 560 300 L640 260 L720 480 Q700 640 630 740 Z" />
+    <path d="M780 640 Q830 460 800 300 L870 270 L940 480 Q920 640 860 740 Z" />
+  </g>
+  <g fill="#d7263d" opacity="0.7">
+    <rect x="420" y="520" width="60" height="180" rx="12" />
+    <rect x="880" y="520" width="60" height="180" rx="12" />
+  </g>
+</svg>

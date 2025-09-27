@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>524d13f4-f0de-4587-839c-835f8aa9f4fb</UserSecretsId>
+  </PropertyGroup>
+
+		<ItemGroup>
+		<PackageReference Include="AWSSDK.SecurityToken" Version="4.0.2.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
+		<PackageReference Include="AWSSDK.SimpleEmailV2" Version="4.0.5.3" />
+		<PackageReference Include="AWSSDK.S3" Version="4.0.7.4" />
+		<PackageReference Include="NodaTime" Version="3.2.2" />
+		<PackageReference Include="Npgsql" Version="9.0.3" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.4" />
+		<PackageReference Include="Npgsql.NodaTime" Version="9.0.3" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageReference Include="Serilog.Extensions" Version="8.1.0" />
+		<PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+		<PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+		</ItemGroup>
+
+		<ItemGroup>
+		  <Folder Include="Logs\" />
+		  <Folder Include="Security\" />
+		  <Folder Include="wwwroot\lib\" />
+		</ItemGroup>
+
+		<ItemGroup>
+		  <ProjectReference Include="..\GE.BandSite.Database\GE.BandSite.Database.csproj" />
+		</ItemGroup>
+
+	</Project>

@@ -1,0 +1,80 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.Events.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Manage Events";
+}
+
+<section>
+    <h1>Events</h1>
+    <p>Publish upcoming showcases for the public events page.</p>
+</section>
+
+<section class="admin-form">
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" asp-for="Input.Id" />
+        <div class="form-field">
+            <label asp-for="Input.Title"></label>
+            <input asp-for="Input.Title" />
+            <span class="validation-message" asp-validation-for="Input.Title"></span>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.EventDate"></label>
+            <input asp-for="Input.EventDate" type="date" />
+            <span class="validation-message" asp-validation-for="Input.EventDate"></span>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.Location"></label>
+            <input asp-for="Input.Location" />
+        </div>
+        <div class="form-field form-field--full">
+            <label asp-for="Input.Description"></label>
+            <textarea asp-for="Input.Description" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.DisplayOrder"></label>
+            <input asp-for="Input.DisplayOrder" type="number" />
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.IsPublished"></label>
+            <input asp-for="Input.IsPublished" type="checkbox" />
+        </div>
+        <button type="submit" class="button button--primary">Save Event</button>
+    </form>
+</section>
+
+<section>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var listing in Model.Events)
+        {
+            <tr>
+                <td>@listing.Title</td>
+                <td>@(listing.EventDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "TBA")</td>
+                <td>@listing.Location</td>
+                <td>@(listing.IsPublished ? "Published" : "Hidden")</td>
+                <td class="admin-table__actions">
+                    <a asp-page-handler="Edit" asp-route-id="@listing.Id">Edit</a>
+                    <form method="post" asp-page-handler="Delete" class="inline-form">
+                        <input type="hidden" name="id" value="@listing.Id" />
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

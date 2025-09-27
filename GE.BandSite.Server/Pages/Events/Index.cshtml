@@ -1,0 +1,39 @@
+@page
+@model GE.BandSite.Server.Pages.Events.IndexModel
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="page">
+    <section class="page__section events-hero">
+        <p class="page-eyebrow">Events</p>
+        <h1 class="page-title">@Model.HeroTitle</h1>
+        <p class="page-lead">@Model.HeroLead</p>
+    </section>
+
+    <section class="page__section events-list">
+        <div class="events-list__items">
+            @foreach (var upcoming in Model.UpcomingEvents)
+            {
+                <article class="event-card">
+                    <header>
+                        <span class="event-card__date">@(upcoming.EventDate?.ToString("MMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "Date TBA")</span>
+                        <h2 class="event-card__name">@upcoming.Title</h2>
+                        <span class="event-card__location">@upcoming.Location</span>
+                    </header>
+                    <p>@upcoming.Description</p>
+                </article>
+            }
+        </div>
+        <aside class="events-list__notes">
+            <h2>Plan your showcase</h2>
+            <ul>
+                @foreach (var note in Model.BookingNotes)
+                {
+                    <li>@note</li>
+                }
+            </ul>
+            <a class="button button--primary" href="/Contact">Request a booking</a>
+        </aside>
+    </section>
+</div>

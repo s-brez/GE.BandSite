@@ -1,0 +1,71 @@
+@page
+@model GE.BandSite.Server.Pages.Services.IndexModel
+@{
+    ViewData["Title"] = "Services";
+}
+
+<div class="page">
+    <section class="page__section services-hero">
+        <div class="services-hero__copy">
+            <p class="page-eyebrow">Services</p>
+            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-lead">@Model.HeroLead</p>
+        </div>
+        <div class="services-hero__banner">
+            <p>Every package includes pre-production consultations, curated set lists, and white-glove coordination with your planner and AV lead.</p>
+        </div>
+    </section>
+
+    <section class="page__section services-grid">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Signature experiences</h2>
+            <p class="section-heading__lead">Tailored entertainment arcs that keep guests engaged from arrival to final encore.</p>
+        </div>
+        <div class="services-grid__packages">
+            @foreach (var package in Model.ServicePackages)
+            {
+                <article class="service-card">
+                    <header class="service-card__header">
+                        <h3 class="service-card__name">@package.Name</h3>
+                        <p class="service-card__summary">@package.Summary</p>
+                    </header>
+                    <ul class="service-card__highlights">
+                        @foreach (var highlight in package.Highlights)
+                        {
+                            <li>@highlight</li>
+                        }
+                    </ul>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="page__section services-lineups">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Flexible lineup packages</h2>
+            <p class="section-heading__lead">Scale the ensemble to suit venue acoustics, guest count, and program pacing.</p>
+        </div>
+        <div class="services-lineups__grid">
+            @foreach (var lineup in Model.LineupPackages)
+            {
+                <article class="lineup-card">
+                    <h3 class="lineup-card__name">@lineup.Name</h3>
+                    <p class="lineup-card__description">@lineup.Description</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="page__section services-addons">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Enhancements</h2>
+            <p class="section-heading__lead">Layer in moments that create lasting memories and reinforce your brand story.</p>
+        </div>
+        <ul class="services-addons__list">
+            @foreach (var addOn in Model.AddOns)
+            {
+                <li>@addOn</li>
+            }
+        </ul>
+    </section>
+</div>

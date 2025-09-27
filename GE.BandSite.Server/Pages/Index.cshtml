@@ -1,0 +1,84 @@
+@page
+@model GE.BandSite.Server.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero">
+    <div class="hero__image">
+        <img src="~/images/home-hero.svg" alt="Swing The Boogie performing for a packed dance floor" />
+    </div>
+    <div class="hero__content">
+        <p class="hero__eyebrow">Gilbert Ernest presents</p>
+        <h1 class="hero__title">@Model.HeroTitle</h1>
+        <p class="hero__lead">@Model.HeroLeadCopy</p>
+        <div class="hero__actions">
+            <a class="button button--primary" href="/Contact">@Model.CallToActionText</a>
+            <a class="button button--ghost" href="/Media">Experience the sound</a>
+        </div>
+    </div>
+</section>
+
+<section class="value-snapshots">
+    <div class="section-heading">
+        <h2 class="section-heading__title">Where swing meets every celebration</h2>
+        <p class="section-heading__lead">Tailored lineups, elevated production, and feel-good swagger for crowds that expect more.</p>
+    </div>
+    <div class="value-snapshots__grid">
+        @foreach (var highlight in Model.ValueHighlights)
+        {
+            <article class="value-card">
+                <h3 class="value-card__title">@highlight.Title</h3>
+                <p class="value-card__copy">@highlight.Description</p>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="highlight-video">
+    <div class="highlight-video__text">
+        <h2 class="section-heading__title">@Model.HighlightVideoTitle</h2>
+        <p class="section-heading__lead">@Model.HighlightVideoSummary</p>
+        <p class="highlight-video__note">Captured live and ready to stream via our media vault.</p>
+        <a class="button button--primary" href="/Contact">Connect with the band</a>
+    </div>
+    <div class="highlight-video__media">
+        @if (Model.HighlightVideo is not null)
+        {
+            <div class="highlight-video__frame">
+                <video controls preload="metadata" poster="@Model.HighlightVideo.PosterUrl">
+                    <source src="@Model.HighlightVideo.Url" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+                <span class="highlight-video__badge">Featured performance</span>
+            </div>
+        }
+        else
+        {
+            <div class="highlight-video__frame">
+                <img src="~/images/highlight-poster.svg" alt="Swing The Boogie highlight reel coming soon" />
+                <span class="highlight-video__badge">Media update pending</span>
+            </div>
+        }
+        @if (Model.HighlightPhotos.Count > 0)
+        {
+            <div class="highlight-video__gallery">
+                @foreach (var photo in Model.HighlightPhotos)
+                {
+                    <figure class="highlight-photo">
+                        <img src="@photo.Url" alt="@photo.Title" />
+                        <figcaption>@photo.Title</figcaption>
+                    </figure>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="cta-banner">
+    <div class="cta-banner__inner">
+        <h2 class="cta-banner__title">Ready to make the night swing?</h2>
+        <p class="cta-banner__copy">From Art Deco ballrooms to rooftop soirées, Swing The Boogie keeps the dance floor buzzing. Tell us about your event and we&apos;ll shape the perfect lineup.</p>
+        <a class="button button--primary" href="/Contact">@Model.CallToActionText</a>
+    </div>
+</section>

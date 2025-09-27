@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="videoIntTitle videoIntDesc">
+  <title id="videoIntTitle">Cocktail hour trio</title>
+  <desc id="videoIntDesc">Minimalist illustration of a trio performing in a lounge setting.</desc>
+  <defs>
+    <linearGradient id="videoIntGradient" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1b1b25" />
+      <stop offset="100%" stop-color="#f4b942" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#videoIntGradient)" />
+  <polygon points="280,120 420,180 280,240" fill="#f5f5f5" opacity="0.9" />
+  <g stroke="#f5f5f5" stroke-width="5" opacity="0.5">
+    <line x1="180" y1="90" x2="460" y2="90" />
+    <line x1="200" y1="270" x2="460" y2="300" />
+  </g>
+</svg>

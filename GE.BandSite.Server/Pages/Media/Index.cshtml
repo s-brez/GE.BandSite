@@ -1,0 +1,64 @@
+@page
+@model GE.BandSite.Server.Pages.Media.IndexModel
+@{
+    ViewData["Title"] = "Media";
+}
+
+<div class="page">
+    <section class="page__section media-hero">
+        <div class="media-hero__copy">
+            <p class="page-eyebrow">Media</p>
+            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-lead">@Model.HeroLead</p>
+        </div>
+        <div class="media-hero__video">
+            @if (Model.FeaturedVideo is not null)
+            {
+                <video class="media-video" controls preload="metadata" poster="@Model.FeaturedVideo.PosterUrl">
+                    <source src="@Model.FeaturedVideo.Url" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+                <div class="media-video__caption">
+                    <h2>@Model.FeaturedVideo.Title</h2>
+                    <p>@Model.FeaturedVideo.Description</p>
+                </div>
+            }
+            else
+            {
+                <div class="media-video__placeholder">Media highlight coming soon.</div>
+            }
+        </div>
+    </section>
+
+    <section class="page__section media-gallery">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Photo highlights</h2>
+            <p class="section-heading__lead">Curated frames capturing the energy of our favourite stages.</p>
+        </div>
+        <div class="media-gallery__grid">
+            @foreach (var photo in Model.PhotoGallery)
+            {
+                <figure class="media-card">
+                    <img src="@photo.Url" alt="@photo.Title" />
+                    <figcaption>@photo.Title</figcaption>
+                </figure>
+            }
+        </div>
+    </section>
+
+    <section class="page__section media-gallery">
+        <div class="section-heading">
+            <h2 class="section-heading__title">Video snapshots</h2>
+            <p class="section-heading__lead">Short takes from rooftop soirées, beach clubs, and ballroom finales.</p>
+        </div>
+        <div class="media-gallery__grid media-gallery__grid--videos">
+            @foreach (var video in Model.VideoGallery)
+            {
+                <figure class="media-card media-card--video">
+                    <img src="@(string.IsNullOrWhiteSpace(video.PosterUrl) ? "/images/media-video-poster.svg" : video.PosterUrl)" alt="@video.Title" />
+                    <figcaption>@video.Title</figcaption>
+                </figure>
+            }
+        </div>
+    </section>
+</div>

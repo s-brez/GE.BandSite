@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="photo2Title photo2Desc">
+  <title id="photo2Title">Destination wedding first dance</title>
+  <desc id="photo2Desc">Abstract figures dancing under string lights with a scenic backdrop.</desc>
+  <defs>
+    <linearGradient id="photoGradient2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f4b942" />
+      <stop offset="100%" stop-color="#050505" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#photoGradient2)" />
+  <g fill="#f5f5f5" opacity="0.9">
+    <path d="M120 500 Q200 360 160 240 L220 210 L280 380 Q260 460 200 540 Z" />
+    <path d="M320 520 Q380 360 340 220 L410 190 L470 380 Q450 480 380 560 Z" />
+  </g>
+  <g stroke="#f5f5f5" stroke-width="6" stroke-dasharray="12 18" opacity="0.6">
+    <line x1="80" y1="160" x2="520" y2="200" />
+    <line x1="100" y1="210" x2="540" y2="260" />
+  </g>
+</svg>

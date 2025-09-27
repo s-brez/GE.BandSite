@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Swing The Boogie band performing on stage</title>
+  <desc id="desc">Stylized silhouettes of a swing band playing brass instruments with vibrant lighting.</desc>
+  <defs>
+    <linearGradient id="stage" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a1d" />
+      <stop offset="100%" stop-color="#050505" />
+    </linearGradient>
+    <linearGradient id="lights" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d7263d" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#f4b942" stop-opacity="0.55" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#stage)" />
+  <g opacity="0.6">
+    <polygon points="200,0 540,0 360,900 0,900" fill="url(#lights)" />
+    <polygon points="1100,0 1600,0 1600,900 900,900" fill="#d7263d" fill-opacity="0.6" />
+    <polygon points="600,0 1100,900 500,900" fill="#f4b942" fill-opacity="0.4" />
+  </g>
+  <g fill="#f5f5f5" opacity="0.9">
+    <path d="M180 720 Q240 500 200 320 L260 280 L340 440 Q360 540 300 760 Z" />
+    <path d="M420 720 Q460 480 430 300 L520 240 L600 460 Q600 580 520 780 Z" />
+    <path d="M750 780 Q800 520 760 320 L860 280 L940 520 Q920 660 840 840 Z" />
+    <path d="M1040 780 Q1080 500 1040 320 L1120 260 L1200 460 Q1200 600 1120 820 Z" />
+    <path d="M1310 760 Q1350 540 1320 320 L1410 280 L1510 500 Q1490 660 1390 840 Z" />
+  </g>
+  <g fill="#d7263d" opacity="0.75">
+    <circle cx="260" cy="380" r="54" />
+    <circle cx="520" cy="320" r="64" />
+    <circle cx="860" cy="360" r="70" />
+    <circle cx="1120" cy="320" r="56" />
+    <circle cx="1410" cy="360" r="60" />
+  </g>
+  <g fill="#f5f5f5" font-family="'Avenir Next', 'Segoe UI', sans-serif" text-anchor="middle" font-size="110" font-weight="700" opacity="0.35">
+    <text x="800" y="200">SWING THE BOOGIE</text>
+    <text x="800" y="310" font-size="80" opacity="0.5">LIVE IN CONCERT</text>
+  </g>
+</svg>

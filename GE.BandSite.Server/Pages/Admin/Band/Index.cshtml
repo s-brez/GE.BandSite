@@ -1,0 +1,76 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.Band.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Manage Band";
+}
+
+<section>
+    <h1>Band Lineup</h1>
+    <p>Update lineup bios and ordering for the public band page.</p>
+</section>
+
+<section class="admin-form">
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" asp-for="Input.Id" />
+        <div class="form-field">
+            <label asp-for="Input.Name"></label>
+            <input asp-for="Input.Name" />
+            <span class="validation-message" asp-validation-for="Input.Name"></span>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.Role"></label>
+            <input asp-for="Input.Role" />
+            <span class="validation-message" asp-validation-for="Input.Role"></span>
+        </div>
+        <div class="form-field form-field--full">
+            <label asp-for="Input.Spotlight"></label>
+            <textarea asp-for="Input.Spotlight" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.DisplayOrder"></label>
+            <input asp-for="Input.DisplayOrder" type="number" />
+        </div>
+        <div class="form-field">
+            <label asp-for="Input.IsActive"></label>
+            <input asp-for="Input.IsActive" type="checkbox" />
+        </div>
+        <button type="submit" class="button button--primary">Save Band Member</button>
+    </form>
+</section>
+
+<section>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var member in Model.BandMembers)
+        {
+            <tr>
+                <td>@member.Name</td>
+                <td>@member.Role</td>
+                <td>@member.DisplayOrder</td>
+                <td>@(member.IsActive ? "Active" : "Inactive")</td>
+                <td class="admin-table__actions">
+                    <a asp-page-handler="Edit" asp-route-id="@member.Id">Edit</a>
+                    <form method="post" asp-page-handler="Delete" class="inline-form">
+                        <input type="hidden" name="id" value="@member.Id" />
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

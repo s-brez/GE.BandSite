@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="photo3Title photo3Desc">
+  <title id="photo3Title">Rooftop soirée sax solo</title>
+  <desc id="photo3Desc">Abstract saxophonist playing under city lights.</desc>
+  <defs>
+    <linearGradient id="photoGradient3" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#121629" />
+      <stop offset="100%" stop-color="#d7263d" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#photoGradient3)" />
+  <g fill="#f5f5f5" opacity="0.85">
+    <path d="M180 520 Q220 360 200 240 L260 210 L320 380 Q300 480 240 560 Z" />
+    <path d="M360 540 Q420 360 380 200 L460 180 L520 400 Q500 520 420 580 Z" />
+  </g>
+  <g fill="#f5f5f5" opacity="0.3">
+    <rect x="60" y="100" width="40" height="140" />
+    <rect x="120" y="80" width="30" height="110" />
+    <rect x="500" y="120" width="36" height="160" />
+  </g>
+</svg>
