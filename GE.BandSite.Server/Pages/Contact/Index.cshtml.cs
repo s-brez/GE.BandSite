@@ -110,8 +110,8 @@ public class IndexModel : PageModel
             new List<SelectOption>
             {
                 new("Under 10k", "Under $10k"),
-                new("10k-20k", "$10k – $20k"),
-                new("20k-40k", "$20k – $40k"),
+                new("10k-20k", "$10k - $20k"),
+                new("20k-40k", "$20k - $40k"),
                 new("40k+", "$40k+"),
             });
 
@@ -122,7 +122,7 @@ public class IndexModel : PageModel
             new("How flexible is the repertoire?", "We build set lists around your vision—mixing classic swing, modern pop-swing remixes, and custom arrangements on request."),
         };
 
-        ResponseCommitment = "Expect a tailored reply within one business day.";
+        ResponseCommitment = "We aim to respond to all enquiries within 3 business days.";
     }
 
     private static LocalDate? ConvertToLocalDate(DateOnly? date) => date.HasValue

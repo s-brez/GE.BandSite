@@ -24,7 +24,6 @@
         <div class="contact-form__intro">
             <h2 class="section-heading__title">Tell us about your event</h2>
             <p class="section-heading__lead">Share the essentials and we&apos;ll tailor a line-up, repertoire, and production plan specifically for your celebration.</p>
-            <div class="contact-form__status">@Model.ResponseCommitment</div>
             @if (Model.SubmissionSucceeded)
             {
                 <div class="contact-form__success" role="status">@Model.SubmissionMessage</div>
@@ -95,14 +94,13 @@
                 <textarea asp-for="Input.Message" rows="4" placeholder="Share run-sheet goals, special songs, or production notes"></textarea>
                 <span class="validation-message" asp-validation-for="Input.Message"></span>
             </div>
-            <button type="submit" class="button button--primary">Book Your Event</button>
+            <button type="submit" class="button button--primary">Book Now</button>
         </form>
     </section>
 
     <section class="page__section contact-faq">
         <div class="section-heading">
-            <h2 class="section-heading__title">Quick answers</h2>
-            <p class="section-heading__lead">Planning teams partner with us for our flexibility and concierge-style communication.</p>
+            <h2 class="section-heading__title">FAQ</h2>
         </div>
         <div class="contact-faq__grid">
             @foreach (var faq in Model.FaqEntries)

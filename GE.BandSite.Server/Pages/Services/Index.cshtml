@@ -11,16 +11,9 @@
             <h1 class="page-title">@Model.HeroTitle</h1>
             <p class="page-lead">@Model.HeroLead</p>
         </div>
-        <div class="services-hero__banner">
-            <p>Every package includes pre-production consultations, curated set lists, and white-glove coordination with your planner and AV lead.</p>
-        </div>
     </section>
 
     <section class="page__section services-grid">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Signature experiences</h2>
-            <p class="section-heading__lead">Tailored entertainment arcs that keep guests engaged from arrival to final encore.</p>
-        </div>
         <div class="services-grid__packages">
             @foreach (var package in Model.ServicePackages)
             {
@@ -43,7 +36,7 @@
     <section class="page__section services-lineups">
         <div class="section-heading">
             <h2 class="section-heading__title">Flexible lineup packages</h2>
-            <p class="section-heading__lead">Scale the ensemble to suit venue acoustics, guest count, and program pacing.</p>
+            <p class="section-heading__lead">Scale the ensemble to suit the venue, guest count, and program pacing.</p>
         </div>
         <div class="services-lineups__grid">
             @foreach (var lineup in Model.LineupPackages)
@@ -57,15 +50,6 @@
     </section>
 
     <section class="page__section services-addons">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Enhancements</h2>
-            <p class="section-heading__lead">Layer in moments that create lasting memories and reinforce your brand story.</p>
-        </div>
-        <ul class="services-addons__list">
-            @foreach (var addOn in Model.AddOns)
-            {
-                <li>@addOn</li>
-            }
-        </ul>
+
     </section>
 </div>

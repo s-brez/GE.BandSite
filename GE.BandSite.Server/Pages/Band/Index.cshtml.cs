@@ -31,8 +31,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "Meet the ten artists behind the Swing The Boogie engine.";
-        HeroLead = "Gilbert Ernest curates a roster of virtuosos who can scale from speakeasy duos to full horn showcases without missing the groove.";
+        HeroTitle = "Meet the Musicians";
+        HeroLead = "From solo acts to the full band, every arrangement is possible.";
 
         BandMembers = await _organizationContent.GetActiveBandMembersAsync().ConfigureAwait(false);
 

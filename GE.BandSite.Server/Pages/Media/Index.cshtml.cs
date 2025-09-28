@@ -32,7 +32,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         HeroTitle = "Watch the dance floor ignite.";
-        HeroLead = "Preview Swing The Boogie in motion with highlights captured from galas, rooftop celebrations, and festival stages.";
+        HeroLead = "Check out Swing the Boogie in action.";
 
         var gallery = await _mediaQueryService.GetGalleryAsync().ConfigureAwait(false);
 

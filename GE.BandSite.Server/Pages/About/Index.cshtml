@@ -8,8 +8,7 @@
     <section class="page__section about-hero">
         <div class="about-hero__copy">
             <p class="page-eyebrow">Our Story</p>
-            <h1 class="page-title">@Model.HeroTitle</h1>
-            <p class="page-lead">@Model.HeroSubtitle</p>
+            <p>Swing The Boogie is more than a band – it’s a performance experience. Led by charismatic vocalist Gilbert Ernest, we bring the timeless spirit of swing and jazz into today’s celebrations. From Melbourne to Madrid, New York to New Delhi, our music has filled ballrooms, weddings, and festivals across the world.</p>
         </div>
         <div class="about-hero__facts">
             @foreach (var fact in Model.SpotlightFacts)
@@ -23,10 +22,6 @@
     </section>
 
     <section class="page__section about-story">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Gilbert Ernest leads a world-touring swing collective</h2>
-            <p class="section-heading__lead">@Model.HeroSubtitle</p>
-        </div>
         <div class="about-story__grid">
             <div class="about-story__narrative">
                 @foreach (var paragraph in Model.StoryParagraphs)
@@ -47,8 +42,7 @@
 
     <section class="page__section about-highlights">
         <div class="section-heading">
-            <h2 class="section-heading__title">Why choose Swing The Boogie</h2>
-            <p class="section-heading__lead">The band blends vintage authenticity with the polish today’s audiences expect.</p>
+            <h2 class="section-heading__title">Why Us</h2>
         </div>
         <div class="about-highlights__list">
             @foreach (var point in Model.WhyChooseUsPoints)

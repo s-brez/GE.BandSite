@@ -45,4 +45,6 @@ Thumbs.db
 
 ThirdParty/**
 GE.BandSite.Server/wwwroot/media/originals/**
+GE.BandSite.Server/wwwroot/images/
+GE.BandSite.Server/wwwroot/videos/
 node_modules/

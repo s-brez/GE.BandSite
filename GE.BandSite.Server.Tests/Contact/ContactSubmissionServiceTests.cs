@@ -114,7 +114,7 @@ public class ContactSubmissionServiceTests
             null,
             "Austin, TX",
             "5-Piece",
-            "$10k – $20k",
+            "$10k - $20k",
             null);
 
         var submitResult = await _service.SubmitAsync(request);

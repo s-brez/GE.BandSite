@@ -43,8 +43,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "The world-class swing band bringing the vibe to your event.";
-        HeroLeadCopy = "Gilbert Ernest fronts a flexible 1–10 piece ensemble that transforms corporate galas, weddings, and premium celebrations into unforgettable dance floors.";
+        HeroTitle = "The World-Class Swing Band That Brings the Vibe.";
+        HeroLeadCopy = "From intimate weddings to global stages, Swing The Boogie delivers unforgettable live music.";
         CallToActionText = "Book Your Event";
 
         ValueHighlights = new List<ValueHighlight>
@@ -52,7 +52,7 @@ public class IndexModel : PageModel
             new("Corporate Events", "Black-tie galas, award nights, and brand launches that demand impeccable swing and polished professionalism."),
             new("Weddings", "First dances through last encores curated to match your story and keep guests on their feet all night."),
             new("Flexible Lineups", "From intimate cocktail duos to roaring 10-piece horn sections, we shape the band around your vision."),
-            new("International Experience", "Worldwide touring pedigree with the logistics discipline to deliver seamless experiences on any continent."),
+            new("International Experience", "Worldwide touring pedigree to deliver seamless experiences on any continent."),
         };
 
         var homeMedia = await _mediaQueryService.GetHomeHighlightsAsync().ConfigureAwait(false);
@@ -60,7 +60,7 @@ public class IndexModel : PageModel
         HighlightVideo = homeMedia.FeaturedVideo ?? CreateFallbackHighlightVideo();
         HighlightPhotos = homeMedia.HighlightPhotos;
 
-        HighlightVideoTitle = HighlightVideo?.Title ?? "Watch the highlight reel";
+        HighlightVideoTitle = HighlightVideo?.Title ?? "Highlight Reel";
         HighlightVideoSummary = HighlightVideo?.Description ?? "Preview the sound, swagger, and crowd energy from recent stages as we warm up the dedicated media gallery.";
         HighlightVideoMimeType = DetermineMimeType(HighlightVideo?.Url);
 
@@ -74,8 +74,8 @@ public class IndexModel : PageModel
         const string fallbackUrl = "https://swingtheboogie-media.s3.ap-southeast-2.amazonaws.com/videos/STB_PromoMain_Horizontal.mp4";
         return new MediaItem(
             Guid.Empty,
-            "Watch the highlight reel",
-            "Preview the energy from the latest Swing The Boogie performances while the media gallery warms up.",
+            "Highlights",
+            "See the energy in action.",
             fallbackUrl,
             "/images/media-video-poster.svg",
             Array.Empty<string>(),

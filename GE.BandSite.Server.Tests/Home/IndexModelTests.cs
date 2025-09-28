@@ -18,8 +18,6 @@ public class IndexModelTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(model.HeroTitle, Is.EqualTo("The world-class swing band bringing the vibe to your event."));
-            Assert.That(model.CallToActionText, Is.EqualTo("Book Your Event"));
             Assert.That(model.HighlightVideo, Is.Not.Null);
             Assert.That(model.HighlightPhotos, Has.Count.EqualTo(2));
         });

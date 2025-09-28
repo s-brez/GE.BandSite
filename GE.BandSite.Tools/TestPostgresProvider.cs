@@ -31,7 +31,7 @@ namespace GE.BandSite.Testing.Core;
 ///     <description>
 ///       If the variable is <c>null</c> or empty, <see href="https://dotnet.testcontainers.org/modules/postgres/">Testcontainers for .NET</see>
 ///       is used to spin up a disposable <c>postgres:17</c> container.  The container lifetime is
-///       bound to the lifetime of the current test run – no global state is written to the host
+///       bound to the lifetime of the current test run - no global state is written to the host
 ///       machine and the container (together with all data) is removed automatically.
 ///     </description>
 ///   </item>
@@ -252,7 +252,7 @@ public class TestPostgresProvider : IAsyncDisposable
 
 
     /// <summary>
-    /// Disposes the supplied <see cref="DbContext"/> but swallows the <c>57P01 – ADMIN SHUTDOWN</c>
+    /// Disposes the supplied <see cref="DbContext"/> but swallows the <c>57P01 - ADMIN SHUTDOWN</c>
     /// error that is thrown when the provider has already terminated the database connection during
     /// test cleanup.
     /// </summary>
@@ -266,7 +266,7 @@ public class TestPostgresProvider : IAsyncDisposable
             }
             catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.AdminShutdown)
             {
-                // The database was already shut down – safe to ignore.
+                // The database was already shut down - safe to ignore.
             }
         }
     }
@@ -329,7 +329,7 @@ public class TestPostgresProvider : IAsyncDisposable
         }
         catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.InvalidCatalogName)
         {
-            // Database does not exist – nothing to drop.
+            // Database does not exist - nothing to drop.
         }
     }
 }

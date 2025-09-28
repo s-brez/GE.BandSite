@@ -26,10 +26,7 @@
     </section>
 
     <section class="page__section band-grid">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Featured musicians</h2>
-            <p class="section-heading__lead">Ten artists who can scale from lounge elegance to roaring big band swagger.</p>
-        </div>
+
         <div class="band-grid__members">
             @foreach (var member in Model.BandMembers)
             {
@@ -42,18 +39,5 @@
                 </article>
             }
         </div>
-    </section>
-
-    <section class="page__section band-highlights">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Global stages, consistent sparkle</h2>
-            <p class="section-heading__lead">Our musicians arrive rehearsal-ready with charts, stems, and curated wardrobe packs.</p>
-        </div>
-        <ul class="band-highlights__list">
-            @foreach (var highlight in Model.TouringHighlights)
-            {
-                <li>@highlight</li>
-            }
-        </ul>
     </section>
 </div>

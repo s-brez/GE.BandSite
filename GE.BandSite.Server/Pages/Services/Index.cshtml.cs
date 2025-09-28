@@ -21,8 +21,8 @@ public class IndexModel : PageModel
 
     public void OnGet()
     {
-        HeroTitle = "Turnkey swing experiences for every milestone.";
-        HeroLead = "From Fortune 100 galas to sunset ceremonies, Swing The Boogie brings concierge-level planning with electrifying performance.";
+        HeroTitle = "Turnkey swing experiences to make your event special";
+        HeroLead = "From Fortune 500 galas to sunset ceremonies, Swing The Boogie brings concierge-level planning with electrifying performance. Every package includes pre-production consultations, curated set lists, and white-glove coordination with your planner and AV lead.";
 
         ServicePackages = new List<ServicePackage>
         {
@@ -65,9 +65,8 @@ public class IndexModel : PageModel
         AddOns = new List<string>
         {
             "Live brass fanfare for grand entrances and award reveals.",
-            "DJ + horn hybrid after-party sets.",
             "Custom charts for first dances or signature brand moments.",
-            "International logistics coordination including carnet prep and backline specs.",
+            "Let us know what you have in mind... Just ask!",
         };
     }
 

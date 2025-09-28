@@ -4,17 +4,39 @@
     ViewData["Title"] = "Home";
 }
 
-<section class="hero">
-    <div class="hero__image">
-        <img src="~/images/home-hero.svg" alt="Swing The Boogie performing for a packed dance floor" />
+<section class="hero hero--video">
+    <div class="hero__video">
+        <video class="hero__video-media" autoplay loop playsinline preload="metadata" poster="~/images/12_web.jpg">
+            <source src="~/videos/STB-PromoMain-Horizontal_720p.webm" type="video/webm" media="(max-width: 900px)" />
+            <source src="~/videos/STB-PromoMain-Horizontal_1280p.webm" type="video/webm" media="(min-width: 901px)" />
+            <source src="~/videos/STB-PromoMain-Horizontal_1280p.mp4" type="video/mp4" media="(min-width: 901px)" />
+            <source src="~/videos/STB-PromoMain-Horizontal_mp4.mp4" type="video/mp4" />
+        </video>
+        <div class="hero__controls" aria-label="Video controls">
+            <div class="hero__control hero__control--mute" role="button" tabindex="0" aria-pressed="false" aria-label="Mute audio" data-muted="true">
+                <svg class="hero__icon hero__icon--volume-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5.5 9H3v6h2.5L9 18.5V5.5L5.5 9Zm9.53-3.22-1.06 1.06A4.5 4.5 0 0 1 15.5 12a4.5 4.5 0 0 1-1.53 3.16l1.06 1.06A6 6 0 0 0 17 12a6 6 0 0 0-1.97-4.22Zm2.97-2.96-1.06 1.06A7.5 7.5 0 0 1 19.5 12a7.5 7.5 0 0 1-2.56 5.5l1.06 1.06A9 9 0 0 0 21 12a9 9 0 0 0-3-6.18Z" />
+                </svg>
+                <svg class="hero__icon hero__icon--volume-off" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5.5 9H3v6h2.5L9 18.5V5.5L5.5 9Zm13.07-3.43-1.06 1.06L20.12 9.3l-1.41 1.41-2.12-2.12-1.41 1.41 2.12 2.12-2.12 2.12 1.41 1.41 2.12-2.12 2.12 2.12 1.41-1.41-2.12-2.12 2.12-2.12Z" />
+                </svg>
+            </div>
+            <div class="hero__control hero__control--play" role="button" tabindex="0" aria-pressed="false" aria-label="Pause video" data-playing="true">
+                <svg class="hero__icon hero__icon--pause" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5h3v14H8V5Zm5 0h3v14h-3V5Z" />
+                </svg>
+                <svg class="hero__icon hero__icon--play" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 5v14l12-7-12-7Z" />
+                </svg>
+            </div>
+        </div>
     </div>
-    <div class="hero__content">
+    <div class="hero__overlay">
         <p class="hero__eyebrow">Gilbert Ernest presents</p>
         <h1 class="hero__title">@Model.HeroTitle</h1>
         <p class="hero__lead">@Model.HeroLeadCopy</p>
         <div class="hero__actions">
             <a class="button button--primary" href="/Contact">@Model.CallToActionText</a>
-            <a class="button button--ghost" href="/Media">Experience the sound</a>
         </div>
     </div>
 </section>
@@ -22,7 +44,6 @@
 <section class="value-snapshots">
     <div class="section-heading">
         <h2 class="section-heading__title">Where swing meets every celebration</h2>
-        <p class="section-heading__lead">Tailored lineups, elevated production, and feel-good swagger for crowds that expect more.</p>
     </div>
     <div class="value-snapshots__grid">
         @foreach (var highlight in Model.ValueHighlights)
@@ -39,8 +60,6 @@
     <div class="highlight-video__text">
         <h2 class="section-heading__title">@Model.HighlightVideoTitle</h2>
         <p class="section-heading__lead">@Model.HighlightVideoSummary</p>
-        <p class="highlight-video__note">Captured live and ready to stream via our media vault.</p>
-        <a class="button button--primary" href="/Contact">Connect with the band</a>
     </div>
     <div class="highlight-video__media">
         @if (Model.HighlightVideo is not null)
