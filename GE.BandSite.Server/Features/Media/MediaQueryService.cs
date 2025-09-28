@@ -42,7 +42,7 @@ public sealed class MediaQueryService : IMediaQueryService
             .FirstOrDefault();
 
         var highlightPhotos = assets
-            .Where(x => x.AssetType == MediaAssetType.Photo)
+            .Where(x => x.AssetType == MediaAssetType.Photo && x.ProcessingState == MediaProcessingState.Ready)
             .Select(Map)
             .ToList();
 
@@ -73,7 +73,7 @@ public sealed class MediaQueryService : IMediaQueryService
             .ToList();
 
         var photos = assets
-            .Where(x => x.AssetType == MediaAssetType.Photo)
+            .Where(x => x.AssetType == MediaAssetType.Photo && x.ProcessingState == MediaProcessingState.Ready)
             .Select(Map)
             .ToList();
 
@@ -82,9 +82,8 @@ public sealed class MediaQueryService : IMediaQueryService
 
     private MediaItem Map(MediaAssetProjection asset)
     {
-        string assetPath = asset.AssetType == MediaAssetType.Video && !string.IsNullOrWhiteSpace(asset.PlaybackPath)
-            ? asset.PlaybackPath!
-            : asset.StoragePath;
+        var hasPlayback = !string.IsNullOrWhiteSpace(asset.PlaybackPath);
+        string assetPath = hasPlayback ? asset.PlaybackPath! : asset.StoragePath;
 
         string url = BuildUrl(assetPath);
         string? posterUrl = !string.IsNullOrWhiteSpace(asset.PosterPath) ? BuildUrl(asset.PosterPath) : null;

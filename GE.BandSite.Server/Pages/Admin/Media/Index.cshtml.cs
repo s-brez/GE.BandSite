@@ -17,13 +17,27 @@ public class IndexModel : PageModel
         _dbContext = dbContext;
     }
 
-    public IReadOnlyList<MediaAsset> MediaAssets { get; private set; } = Array.Empty<MediaAsset>();
+    public IReadOnlyList<AdminMediaAssetViewModel> MediaAssets { get; private set; } = Array.Empty<AdminMediaAssetViewModel>();
 
     public async Task OnGetAsync()
     {
         MediaAssets = await _dbContext.MediaAssets
             .OrderBy(x => x.DisplayOrder)
             .ThenBy(x => x.CreatedAt)
+            .Select(x => new AdminMediaAssetViewModel(
+                x.Id,
+                x.Title,
+                x.Description,
+                x.AssetType,
+                x.IsPublished,
+                x.ShowOnHome,
+                x.IsFeatured,
+                x.DisplayOrder,
+                x.ProcessingState,
+                x.ProcessingError,
+                x.PlaybackPath,
+                x.StoragePath,
+                x.PosterPath))
             .ToListAsync()
             .ConfigureAwait(false);
     }
@@ -53,4 +67,57 @@ public class IndexModel : PageModel
 
         return RedirectToPage();
     }
+}
+
+public sealed class AdminMediaAssetViewModel
+{
+    public AdminMediaAssetViewModel(
+        Guid id,
+        string title,
+        string? description,
+        MediaAssetType assetType,
+        bool isPublished,
+        bool showOnHome,
+        bool isFeatured,
+        int displayOrder,
+        MediaProcessingState processingState,
+        string? processingError,
+        string? playbackPath,
+        string? storagePath,
+        string? posterPath)
+    {
+        Id = id;
+        Title = title;
+        Description = description;
+        AssetType = assetType;
+        IsPublished = isPublished;
+        ShowOnHome = showOnHome;
+        IsFeatured = isFeatured;
+        DisplayOrder = displayOrder;
+        ProcessingState = processingState;
+        ProcessingError = processingError;
+        PlaybackPath = playbackPath;
+        StoragePath = storagePath;
+        PosterPath = posterPath;
+    }
+
+    public Guid Id { get; }
+    public string Title { get; }
+    public string? Description { get; }
+    public MediaAssetType AssetType { get; }
+    public bool IsPublished { get; }
+    public bool ShowOnHome { get; }
+    public bool IsFeatured { get; }
+    public int DisplayOrder { get; }
+    public MediaProcessingState ProcessingState { get; }
+    public string? ProcessingError { get; }
+    public string? PlaybackPath { get; }
+    public string? StoragePath { get; }
+    public string? PosterPath { get; }
+
+    public string? DeliveryPath => ProcessingState == MediaProcessingState.Ready && !string.IsNullOrWhiteSpace(PlaybackPath)
+        ? PlaybackPath
+        : null;
+
+    public bool HasDeliveryPath => !string.IsNullOrWhiteSpace(DeliveryPath);
 }

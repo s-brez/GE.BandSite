@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using GE.BandSite.Database;
 using GE.BandSite.Database.Media;
 using GE.BandSite.Server.Configuration;
@@ -92,6 +94,7 @@ public class MediaUploadProcessingIntegrationTests
         var coordinator = new MediaProcessingCoordinator(
             _dbContext,
             new CopyingTranscoder(),
+            new ImageSharpImageOptimizer(),
             SystemClock.Instance,
             _storage,
             processingOptions,
@@ -103,15 +106,78 @@ public class MediaUploadProcessingIntegrationTests
 
         var stored = await _dbContext.MediaAssets.SingleAsync(x => x.Id == asset.Id);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stored.ProcessingState, Is.EqualTo(MediaProcessingState.Ready));
             Assert.That(stored.PlaybackPath, Is.Not.Null);
+            Assert.That(stored.PlaybackPath, Does.EndWith("_mp4.mp4"));
             Assert.That(stored.DurationSeconds, Is.Not.Null);
             Assert.That(File.Exists(Path.Combine(_root, stored.PlaybackPath!.Replace('/', Path.DirectorySeparatorChar))), Is.True);
-        });
+        }
 
         Assert.That(_storage.Uploads, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task RequeueLegacyMov_ReprocessesToMp4()
+    {
+        var rawVideoKey = SetupRawFile("uploads/raw/videos/legacy.mov", "video-content");
+        var adminService = CreateAdminService();
+
+        var asset = await adminService.CreateVideoAssetAsync(new CreateVideoAssetParameters(
+            Title: "Legacy Highlight",
+            RawVideoKey: rawVideoKey,
+            VideoContentType: "video/quicktime",
+            Description: null,
+            RawPosterKey: null,
+            PosterContentType: null,
+            IsFeatured: false,
+            ShowOnHome: false,
+            IsPublished: false,
+            DisplayOrder: 5)).ConfigureAwait(false);
+
+        asset.ProcessingState = MediaProcessingState.Ready;
+        asset.PlaybackPath = asset.StoragePath;
+        asset.LastProcessedAt = SystemClock.Instance.GetCurrentInstant();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+
+        asset.ProcessingState = MediaProcessingState.Pending;
+        asset.ProcessingError = null;
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+
+        var processingOptions = Options.Create(new MediaProcessingOptions
+        {
+            TempDirectory = Path.Combine(_root, "temp"),
+            BatchSize = 5
+        });
+
+        var storageOptions = Options.Create(new MediaStorageOptions
+        {
+            VideoPlaybackPrefix = "media/videos/playback"
+        });
+
+        var coordinator = new MediaProcessingCoordinator(
+            _dbContext,
+            new CopyingTranscoder(),
+            new ImageSharpImageOptimizer(),
+            SystemClock.Instance,
+            _storage,
+            processingOptions,
+            storageOptions,
+            NullLogger<MediaProcessingCoordinator>.Instance);
+
+        var processed = await coordinator.ProcessPendingAsync().ConfigureAwait(false);
+        Assert.That(processed, Is.EqualTo(1));
+
+        var stored = await _dbContext.MediaAssets.SingleAsync(x => x.Id == asset.Id).ConfigureAwait(false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stored.ProcessingState, Is.EqualTo(MediaProcessingState.Ready));
+            Assert.That(stored.PlaybackPath, Is.Not.Null);
+            Assert.That(stored.PlaybackPath, Does.EndWith("_mp4.mp4"));
+            Assert.That(File.Exists(Path.Combine(_root, stored.PlaybackPath!.Replace('/', Path.DirectorySeparatorChar))), Is.True);
+        }
     }
 
     private string SetupRawFile(string relativePath, string content)
@@ -127,6 +193,9 @@ public class MediaUploadProcessingIntegrationTests
     {
         var options = Options.Create(new MediaStorageOptions
         {
+            PhotoSourcePrefix = "images/originals",
+            PhotoPrefix = "images/optimized",
+            VideoSourcePrefix = "videos/originals",
             VideoPlaybackPrefix = "media/videos/playback"
         });
 
@@ -193,27 +262,21 @@ public class MediaUploadProcessingIntegrationTests
 
         public Task<string> PromotePhotoAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
-            var destination = $"media/photos/{assetId:N}.jpg";
+            var destination = NormalizeKey(Path.Combine("images", "originals", fileName));
             Copy(rawKey, destination);
             return Task.FromResult(destination);
         }
 
         public Task<string> PromotePosterAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
-            var destination = $"media/posters/{assetId:N}.jpg";
+            var destination = NormalizeKey(Path.Combine("thumbnails", fileName));
             Copy(rawKey, destination);
             return Task.FromResult(destination);
         }
 
         public Task<string> PromoteVideoSourceAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
-            var extension = Path.GetExtension(rawKey);
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".mp4";
-            }
-
-            var destination = $"media/videos/source/{assetId:N}{extension}";
+            var destination = NormalizeKey(Path.Combine("videos", "originals", fileName));
             Copy(rawKey, destination);
             return Task.FromResult(destination);
         }

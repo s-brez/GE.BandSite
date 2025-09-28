@@ -54,7 +54,13 @@ public sealed class MediaStorageService : IMediaStorageService
 
     public async Task<string> PromotePhotoAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
     {
-        return await PromoteAsync(rawKey, _options.PhotoPrefix, assetId, fileName, contentType, cancellationToken).ConfigureAwait(false);
+        var destinationPrefix = string.IsNullOrWhiteSpace(_options.PhotoSourcePrefix)
+            ? _options.PhotoPrefix
+            : _options.PhotoSourcePrefix;
+
+        destinationPrefix = NormalizeKey(destinationPrefix);
+
+        return await PromoteAsync(rawKey, destinationPrefix, assetId, fileName, contentType, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<string> PromoteVideoSourceAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
@@ -147,7 +153,7 @@ public sealed class MediaStorageService : IMediaStorageService
         ArgumentException.ThrowIfNullOrWhiteSpace(contentType);
 
         var normalizedRaw = NormalizeKey(rawKey);
-        var destinationKey = BuildFinalKey(destinationPrefix, assetId, fileName);
+        var destinationKey = BuildFinalKey(destinationPrefix, assetId, fileName, normalizedRaw);
         var localRawPath = await EnsureLocalCopyAsync(normalizedRaw, cancellationToken).ConfigureAwait(false);
         var localDestinationPath = _pathResolver.Resolve(destinationKey);
 
@@ -233,17 +239,23 @@ public sealed class MediaStorageService : IMediaStorageService
         return Combine(basePath, safeFileName);
     }
 
-    private string BuildFinalKey(string prefix, Guid assetId, string fileName)
+    private string BuildFinalKey(string prefix, Guid assetId, string fileName, string? fallbackRawKey = null)
     {
-        var safeBase = BuildSafeFileName(fileName);
+        var baseName = string.IsNullOrWhiteSpace(fileName)
+            ? fallbackRawKey ?? assetId.ToString("N", System.Globalization.CultureInfo.InvariantCulture)
+            : fileName;
+
+        var safeBase = BuildSafeFileName(baseName);
         var extension = Path.GetExtension(safeBase);
         var cleanName = Path.GetFileNameWithoutExtension(safeBase);
-        var timestamp = DateTime.UtcNow;
-        var identifier = assetId.ToString("N", System.Globalization.CultureInfo.InvariantCulture);
-        var finalName = string.IsNullOrWhiteSpace(cleanName)
-            ? identifier + extension
-            : string.Concat(identifier, "-", cleanName, extension);
+        if (string.IsNullOrWhiteSpace(cleanName))
+        {
+            cleanName = assetId.ToString("N", System.Globalization.CultureInfo.InvariantCulture);
+        }
 
+        var finalName = string.Concat(cleanName, extension);
+
+        var timestamp = DateTime.UtcNow;
         var dated = Combine(prefix, timestamp.Year.ToString("D4", System.Globalization.CultureInfo.InvariantCulture), timestamp.Month.ToString("D2", System.Globalization.CultureInfo.InvariantCulture));
         return Combine(dated, finalName);
     }

@@ -114,3 +114,30 @@
     - Manual: run backup in staging, verify S3 object & retention, exercise runbook steps, confirm CloudFront/Route 53/SES checks.
   - **Acceptance Criteria**
     - Backup job runs, enforces retention, and is documented; log retention configured; ops runbook complete; manual validation recorded.
+
+- [x] Stage 9: Local Transcode Pipeline
+  - **Scope**
+    - Auto-import existing photos/videos from the configured S3 bucket so real assets populate `MediaAsset` on startup and legacy sources enter the transcode queue.
+    - Reprocess existing `.mov` assets by resetting their processing state so the hosted service produces MP4 playbacks without manual intervention.
+    - Ensure all admin-uploaded .mov sources are transcoded to browser-safe MP4 versions inside the app's existing media processing loop.
+    - Store raw masters under the existing raw prefixes, publish transcoded MP4s under the playback prefix, and keep metadata aligned.
+    - Update fallback media and public queries so the home page and gallery always render processed MP4 assets.
+  - **Key Files**
+    - `GE.BandSite.Server/Features/Media/Admin/MediaAdminService.cs` – queue uploads with raw paths and pending state.
+    - `GE.BandSite.Server/Features/Media/Processing/*` – coordinator, hosted service, and `FfmpegMediaTranscoder` improvements for MP4 output.
+    - `GE.BandSite.Server/Features/Media/Storage/MediaStorageService.cs` & options – ensure processed uploads land under playback prefixes and S3 content-types.
+    - `GE.BandSite.Server/Pages/Index.cshtml(.cs)` – update fallback/media URLs once MP4 outputs exist.
+  - **Infrastructure**
+    - Document backlog requeue steps: identify `.mov` assets in S3/DB, mark them `Pending`, and let the hosted service regenerate MP4 playback paths.
+    - Require `MediaProcessingOptions.FfmpegPath` and temp directories per environment; document FFmpeg installation for Windows/Linux.
+    - Keep hosted service single-threaded; add logging/metrics for conversion start, success, failure.
+    - Ensure S3 playback prefix (or CloudFront) exposes MP4s with `video/mp4` content-type and CORS/range headers.
+  - **Testing**
+    - Manual: requeue an existing `.mov`, verify MP4 playback appears in S3 and the public site, then remove any legacy `.mov` playback references.
+    - Unit: command generation/error handling in `FfmpegMediaTranscoder`, admin service validations.
+    - Integration: seed a raw `.mov`, run `MediaProcessingCoordinator`, assert MP4 playback path and ready state.
+    - Integration (explicit): fetch the published MP4 over HTTPS via pre-signed or public URL and validate partial content response.
+  - **Acceptance Criteria**
+    - Uploaded `.mov` assets yield published `.mp4` playback keys with duration metadata and posters.
+    - Public pages exclusively reference MP4 URLs; hero fallback video is MP4 and plays in modern browsers.
+    - Automated tests and manual runs confirm end-to-end processing, S3 delivery, and browser playback.

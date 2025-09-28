@@ -1,3 +1,4 @@
+using System.IO;
 using GE.BandSite.Database;
 using GE.BandSite.Database.Media;
 using GE.BandSite.Server.Configuration;
@@ -69,15 +70,17 @@ public class MediaAdminServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(asset.AssetType, Is.EqualTo(MediaAssetType.Photo));
-            Assert.That(asset.ProcessingState, Is.EqualTo(MediaProcessingState.Ready));
+            Assert.That(asset.ProcessingState, Is.EqualTo(MediaProcessingState.Pending));
             Assert.That(asset.StoragePath, Is.EqualTo(_storage.LastPromotedPhotoPath));
             Assert.That(asset.SourcePath, Is.EqualTo(_storage.LastPromotedPhotoPath));
             Assert.That(asset.PosterPath, Is.Null);
+            Assert.That(asset.PlaybackPath, Is.Null);
         });
 
         var stored = await _dbContext.MediaAssets.SingleAsync(x => x.Id == asset.Id);
         Assert.That(stored.IsPublished, Is.True);
         Assert.That(_storage.PhotoPromotions.Count, Is.EqualTo(1));
+        Assert.That(_storage.PhotoPromotions[0].FileName, Is.EqualTo("raw-file.jpg"));
     }
 
     [Test]
@@ -104,12 +107,14 @@ public class MediaAdminServiceTests
             Assert.That(asset.AssetType, Is.EqualTo(MediaAssetType.Video));
             Assert.That(asset.ProcessingState, Is.EqualTo(MediaProcessingState.Pending));
             Assert.That(asset.StoragePath, Is.EqualTo(_storage.LastPromotedVideoPath));
-            Assert.That(asset.PlaybackPath, Does.EndWith($"{asset.Id:N}.mp4"));
+            Assert.That(asset.PlaybackPath, Is.Null);
             Assert.That(asset.PosterPath, Is.EqualTo(_storage.LastPromotedPosterPath));
         });
 
         Assert.That(_storage.VideoPromotions.Count, Is.EqualTo(1));
         Assert.That(_storage.PosterPromotions.Count, Is.EqualTo(1));
+        Assert.That(_storage.VideoPromotions[0].FileName, Is.EqualTo("highlight.mov"));
+        Assert.That(_storage.PosterPromotions[0].FileName, Is.EqualTo("highlight.jpg"));
     }
 
     private MediaAdminService CreateService()
@@ -160,21 +165,22 @@ public class MediaAdminServiceTests
         public Task<string> PromotePhotoAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
             PhotoPromotions.Add((rawKey, assetId, fileName, contentType));
-            LastPromotedPhotoPath = $"media/photos/{assetId:N}.jpg";
+            var sanitized = NormalizeKey(Path.Combine("images", "originals", fileName));
+            LastPromotedPhotoPath = sanitized;
             return Task.FromResult(LastPromotedPhotoPath);
         }
 
         public Task<string> PromotePosterAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
             PosterPromotions.Add((rawKey, assetId, fileName, contentType));
-            LastPromotedPosterPath = $"media/posters/{assetId:N}.jpg";
+            LastPromotedPosterPath = NormalizeKey(Path.Combine("thumbnails", fileName));
             return Task.FromResult(LastPromotedPosterPath);
         }
 
         public Task<string> PromoteVideoSourceAsync(string rawKey, Guid assetId, string fileName, string contentType, CancellationToken cancellationToken = default)
         {
             VideoPromotions.Add((rawKey, assetId, fileName, contentType));
-            LastPromotedVideoPath = $"media/videos/source/{assetId:N}.mov";
+            LastPromotedVideoPath = NormalizeKey(Path.Combine("videos", "originals", fileName));
             return Task.FromResult(LastPromotedVideoPath);
         }
 

@@ -1,0 +1,32 @@
+@page
+@model GE.BandSite.Server.Pages.LoginModel
+@{
+    ViewData["Title"] = "Admin Login";
+}
+<section class="page-section page-section--narrow">
+    <h1 class="page-heading">Admin Login</h1>
+    <p class="page-intro">Sign in to manage site content and media.</p>
+
+    <form method="post" asp-page="/Login" class="form form--stacked">
+        <div asp-validation-summary="ModelOnly" class="form-errors"></div>
+
+        <div class="form-field">
+            <label asp-for="Input.Email" class="form-label"></label>
+            <input asp-for="Input.Email" class="form-input" autocomplete="username" />
+            <span asp-validation-for="Input.Email" class="form-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Input.Password" class="form-label"></label>
+            <input asp-for="Input.Password" class="form-input" autocomplete="current-password" />
+            <span asp-validation-for="Input.Password" class="form-error"></span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.RedirectPath))
+        {
+            <input type="hidden" name="@GE.BandSite.Server.Authentication.AuthenticationConfiguration.RedirectQueryKey" value="@Model.RedirectPath" />
+        }
+
+        <button type="submit" class="button button--primary">Sign in</button>
+    </form>
+</section>

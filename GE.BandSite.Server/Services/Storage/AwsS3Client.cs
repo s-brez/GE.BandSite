@@ -66,7 +66,7 @@ public sealed class AwsS3Client : IS3Client
 
     public void Dispose()
     {
-        _amazonS3.Dispose();
+        // Lifetime of the underlying Amazon S3 client is managed by the DI container.
     }
 }
 

@@ -1,3 +1,6 @@
+using System;
+using System.Globalization;
+using System.IO;
 using GE.BandSite.Database;
 using GE.BandSite.Database.Media;
 using GE.BandSite.Server.Configuration;
@@ -41,7 +44,8 @@ public sealed class MediaAdminService : IMediaAdminService
         ValidatePhotoParameters(parameters);
 
         var assetId = Guid.NewGuid();
-        var storagePath = await _storageService.PromotePhotoAsync(parameters.RawObjectKey, assetId, parameters.Title, parameters.ContentType, cancellationToken).ConfigureAwait(false);
+        var originalFileName = ExtractFileName(parameters.RawObjectKey, parameters.Title, GuessExtension(parameters.ContentType, ".jpg"));
+        var storagePath = await _storageService.PromotePhotoAsync(parameters.RawObjectKey, assetId, originalFileName, parameters.ContentType, cancellationToken).ConfigureAwait(false);
 
         var asset = new MediaAsset
         {
@@ -53,7 +57,7 @@ public sealed class MediaAdminService : IMediaAdminService
             SourcePath = storagePath,
             PlaybackPath = null,
             PosterPath = null,
-            ProcessingState = MediaProcessingState.Ready,
+            ProcessingState = MediaProcessingState.Pending,
             IsFeatured = parameters.IsFeatured,
             ShowOnHome = parameters.ShowOnHome,
             IsPublished = parameters.IsPublished,
@@ -70,22 +74,22 @@ public sealed class MediaAdminService : IMediaAdminService
         ValidateVideoParameters(parameters);
 
         var assetId = Guid.NewGuid();
-        var storagePath = await _storageService.PromoteVideoSourceAsync(parameters.RawVideoKey, assetId, parameters.Title, parameters.VideoContentType, cancellationToken).ConfigureAwait(false);
+        var originalFileName = ExtractFileName(parameters.RawVideoKey, parameters.Title, GuessExtension(parameters.VideoContentType, ".mp4"));
+        var storagePath = await _storageService.PromoteVideoSourceAsync(parameters.RawVideoKey, assetId, originalFileName, parameters.VideoContentType, cancellationToken).ConfigureAwait(false);
 
         string? posterPath = null;
         if (!string.IsNullOrWhiteSpace(parameters.RawPosterKey) && !string.IsNullOrWhiteSpace(parameters.PosterContentType))
         {
             try
             {
-                posterPath = await _storageService.PromotePosterAsync(parameters.RawPosterKey, assetId, parameters.Title + " poster", parameters.PosterContentType!, cancellationToken).ConfigureAwait(false);
+                var posterFileName = ExtractFileName(parameters.RawPosterKey, parameters.Title + " poster", GuessExtension(parameters.PosterContentType!, ".jpg"));
+                posterPath = await _storageService.PromotePosterAsync(parameters.RawPosterKey, assetId, posterFileName, parameters.PosterContentType!, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 _logger.LogWarning(exception, "Failed to promote poster for video asset {AssetId}. Continuing without poster.", assetId);
             }
         }
-
-        var playbackRelative = BuildPlaybackPath(assetId);
 
         var asset = new MediaAsset
         {
@@ -95,7 +99,7 @@ public sealed class MediaAdminService : IMediaAdminService
             AssetType = MediaAssetType.Video,
             StoragePath = storagePath,
             SourcePath = storagePath,
-            PlaybackPath = playbackRelative,
+            PlaybackPath = null,
             PosterPath = posterPath,
             ProcessingState = MediaProcessingState.Pending,
             IsFeatured = parameters.IsFeatured,
@@ -115,13 +119,6 @@ public sealed class MediaAdminService : IMediaAdminService
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private string BuildPlaybackPath(Guid assetId)
-    {
-        var basePrefix = _storageService.NormalizeKey(_storageOptions.VideoPlaybackPrefix);
-        var fileName = string.Concat(assetId.ToString("N", System.Globalization.CultureInfo.InvariantCulture), ".mp4");
-        return _storageService.NormalizeKey(string.Join('/', basePrefix, fileName));
-    }
-
     private static void ValidatePhotoParameters(CreatePhotoAssetParameters parameters)
     {
         ArgumentNullException.ThrowIfNull(parameters);
@@ -136,5 +133,38 @@ public sealed class MediaAdminService : IMediaAdminService
         ArgumentException.ThrowIfNullOrWhiteSpace(parameters.Title);
         ArgumentException.ThrowIfNullOrWhiteSpace(parameters.RawVideoKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(parameters.VideoContentType);
+    }
+
+    private static string ExtractFileName(string? rawKey, string fallback, string defaultExtension)
+    {
+        if (!string.IsNullOrWhiteSpace(rawKey))
+        {
+            var fileName = Path.GetFileName(rawKey);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return fileName;
+            }
+        }
+
+        var safeFallback = fallback.Replace(' ', '-');
+        if (!defaultExtension.StartsWith(".", StringComparison.Ordinal))
+        {
+            defaultExtension = "." + defaultExtension;
+        }
+
+        return string.Concat(safeFallback, defaultExtension);
+    }
+
+    private static string GuessExtension(string contentType, string fallback)
+    {
+        return contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            "image/webp" => ".webp",
+            "video/quicktime" => ".mov",
+            "video/mp4" => ".mp4",
+            _ => fallback
+        };
     }
 }

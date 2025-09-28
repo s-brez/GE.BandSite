@@ -46,8 +46,8 @@
         @if (Model.HighlightVideo is not null)
         {
             <div class="highlight-video__frame">
-                <video controls preload="metadata" poster="@Model.HighlightVideo.PosterUrl">
-                    <source src="@Model.HighlightVideo.Url" type="video/mp4" />
+                <video controls preload="metadata" poster="@Model.HighlightVideo?.PosterUrl">
+                    <source src="@Model.HighlightVideo?.Url" type="@Model.HighlightVideoMimeType" />
                     Your browser does not support the video tag.
                 </video>
                 <span class="highlight-video__badge">Featured performance</span>

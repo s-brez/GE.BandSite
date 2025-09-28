@@ -31,6 +31,8 @@
 - The video pipeline depends on `ffmpeg` available at `MediaProcessing: FfmpegPath` (default `ffmpeg`). Confirm the binary is present with `ffmpeg -version`; install from the distribution repository for the EC2 AMI if missing.
 - When updating ffmpeg, restart the application service to ensure the hosted background worker picks up the new binary path. Run an admin video upload on staging to verify transcodes succeed end-to-end.
 - Troubleshoot failures by reviewing logs emitted by `MediaProcessingHostedService`; errors surface the command line and exception details.
+- On application startup the media bootstrapper scans the configured S3 prefixes and inserts missing `MediaAsset` rows. Legacy `.mov` sources are added with `Pending` state so the transcode worker can regenerate MP4 playback files automatically.
+- To regenerate MP4 playbacks for existing `.mov` uploads, list raw objects under `uploads/raw/` in S3, locate the corresponding records in `MediaAssets`, set `ProcessingState` back to `Pending`, and allow the hosted service to reprocess them. Confirm new `.mp4` files appear under the playback prefix before toggling publication flags.
 
 ## Email Notifications (SES)
 - Contact form notifications use Amazon SES in `us-east-1`. Verify the sending identity remains in production mode and monitor bounce/complaint metrics using the SES console (see [SES sending activity monitoring](https://docs.aws.amazon.com/ses/latest/dg/monitor-sending-activity.html)).

@@ -42,7 +42,12 @@ public sealed class MediaProcessingHostedService : BackgroundService
                 var processed = await coordinator.ProcessPendingAsync(stoppingToken).ConfigureAwait(false);
                 if (processed == 0)
                 {
+                    _logger.LogDebug("Media processing queue empty.");
                     await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    _logger.LogInformation("Media processing completed for {Count} asset(s).", processed);
                 }
             }
             catch (OperationCanceledException)

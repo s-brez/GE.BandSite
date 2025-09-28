@@ -16,6 +16,11 @@ public sealed class MediaStorageOptions
     public string RawUploadPrefix { get; set; } = "uploads/raw";
 
     /// <summary>
+    /// Gets or sets the key prefix used for original photo assets retained for processing.
+    /// </summary>
+    public string PhotoSourcePrefix { get; set; } = "images/originals";
+
+    /// <summary>
     /// Gets or sets the key prefix used for published photo assets.
     /// </summary>
     public string PhotoPrefix { get; set; } = "media/photos";

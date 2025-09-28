@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using GE.BandSite.Server.Features.Media;
 using GE.BandSite.Server.Features.Media.Models;
@@ -36,6 +37,8 @@ public class IndexModel : PageModel
 
     public MediaItem? HighlightVideo { get; private set; }
 
+    public string HighlightVideoMimeType { get; private set; } = string.Empty;
+
     public IReadOnlyList<MediaItem> HighlightPhotos { get; private set; } = Array.Empty<MediaItem>();
 
     public async Task OnGetAsync()
@@ -54,14 +57,52 @@ public class IndexModel : PageModel
 
         var homeMedia = await _mediaQueryService.GetHomeHighlightsAsync().ConfigureAwait(false);
 
-        HighlightVideo = homeMedia.FeaturedVideo;
+        HighlightVideo = homeMedia.FeaturedVideo ?? CreateFallbackHighlightVideo();
         HighlightPhotos = homeMedia.HighlightPhotos;
 
         HighlightVideoTitle = HighlightVideo?.Title ?? "Watch the highlight reel";
         HighlightVideoSummary = HighlightVideo?.Description ?? "Preview the sound, swagger, and crowd energy from recent stages as we warm up the dedicated media gallery.";
+        HighlightVideoMimeType = DetermineMimeType(HighlightVideo?.Url);
 
         _logger.LogDebug("Home page content prepared with {ValueCount} value highlights.", ValueHighlights.Count);
     }
 
     public sealed record ValueHighlight(string Title, string Description);
+
+    private static MediaItem CreateFallbackHighlightVideo()
+    {
+        const string fallbackUrl = "https://swingtheboogie-media.s3.ap-southeast-2.amazonaws.com/videos/STB_PromoMain_Horizontal.mp4";
+        return new MediaItem(
+            Guid.Empty,
+            "Watch the highlight reel",
+            "Preview the energy from the latest Swing The Boogie performances while the media gallery warms up.",
+            fallbackUrl,
+            "/images/media-video-poster.svg",
+            Array.Empty<string>(),
+            "Video");
+    }
+
+    private static string DetermineMimeType(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return "video/mp4";
+        }
+
+        var candidate = url;
+        if (Uri.TryCreate(url, UriKind.Absolute, out var absolute))
+        {
+            candidate = absolute.AbsolutePath;
+        }
+
+        var extension = Path.GetExtension(candidate).ToLowerInvariant();
+
+        return extension switch
+        {
+            ".mov" => "video/quicktime",
+            ".webm" => "video/webm",
+            ".ogg" or ".ogv" => "video/ogg",
+            _ => "video/mp4"
+        };
+    }
 }

@@ -2,7 +2,9 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Amazon.SimpleEmailV2;
+using Amazon.SimpleEmailV2.Model;
 using GE.BandSite.Database;
 using GE.BandSite.Database.Configuration;
 using GE.BandSite.Server.Authentication;
@@ -15,6 +17,8 @@ using GE.BandSite.Server.Features.Media.Storage;
 using GE.BandSite.Server.Features.Operations.Backups;
 using GE.BandSite.Server.Features.Organization;
 using GE.BandSite.Server.Services;
+using GE.BandSite.Server.Services.Storage;
+using GE.BandSite.Server.Services.Processes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -32,9 +36,52 @@ public class Program
 
         IConfiguration configuration = appBuilder.Configuration;
 
+        var loggingConfiguration = LoadLoggingConfiguration(configuration);
+
+        LoadSeedUsers(configuration);
+
+        ConfigureSerilog(appBuilder, loggingConfiguration);
+
+        RegisterDatabaseServices(appBuilder, configuration);
+
+        RegisterAuthenticationServices(appBuilder, configuration);
+
+        RegisterInfrastructureServices(appBuilder, configuration);
+
+        RegisterAwsServices(appBuilder, configuration);
+
+        RegisterFeatureServices(appBuilder);
+
+        RegisterHostedServices(appBuilder);
+
+        RegisterPresentationLayer(appBuilder);
+
+        ConfigureServiceProvider(appBuilder);
+
+        WebApplication app = appBuilder.Build();
+
+        WarmAwsClients(app.Services);
+
+        EagerInitializeSingletons(appBuilder.Services, app.Services);
+
+        ValidateServiceConstructions(appBuilder.Services, app.Services);
+
+        ConfigureApplication(app);
+
+        EnsureDatabasePrepared(app.Services);
+
+        app.Run();
+    }
+
+    private static LoggingConfiguration LoadLoggingConfiguration(IConfiguration configuration)
+    {
         var loggingConfiguration = new LoggingConfiguration();
         configuration.GetSection("Logging").Bind(loggingConfiguration);
+        return loggingConfiguration;
+    }
 
+    private static void LoadSeedUsers(IConfiguration configuration)
+    {
         try
         {
             var seedUserConfiguration = configuration.GetSection("SeedUsers")?
@@ -48,7 +95,10 @@ public class Program
             Log.Error(exception, "Failed to load system user data");
             Constants.SetSystemUserConfiguration(null);
         }
+    }
 
+    private static void ConfigureSerilog(WebApplicationBuilder builder, LoggingConfiguration loggingConfiguration)
+    {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Is(LogEventLevel.Information)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -65,10 +115,13 @@ public class Program
                 retainedFileCountLimit: loggingConfiguration.RetainedFileCount)
             .CreateLogger();
 
-        appBuilder.Host.UseSerilog();
+        builder.Host.UseSerilog();
+    }
 
-        appBuilder.Services
-            .AddDbContext<GeBandSiteDbContext>((sp, dbContextOptionsBuilder) =>
+    private static void RegisterDatabaseServices(WebApplicationBuilder builder, IConfiguration configuration)
+    {
+        builder.Services
+            .AddDbContext<GeBandSiteDbContext>((_, dbContextOptionsBuilder) =>
             {
                 dbContextOptionsBuilder.UseNpgsql(configuration.GetConnectionString("Database"), npgsqlOptions =>
                 {
@@ -82,152 +135,137 @@ public class Program
 #endif
             });
 
-        appBuilder.Services.AddScoped<IGeBandSiteDbContext>(x => x.GetRequiredService<GeBandSiteDbContext>());
+        builder.Services.AddScoped<IGeBandSiteDbContext>(x => x.GetRequiredService<GeBandSiteDbContext>());
+    }
 
-        appBuilder.Services
-            .AddTransient(serviceProvider =>
+    private static void RegisterAuthenticationServices(WebApplicationBuilder builder, IConfiguration configuration)
+    {
+        builder.Services
+            .AddSingleton(_ =>
             {
-                AwsConfiguration aWSConfiguration = new();
-                configuration.GetSection("AWS").Bind(aWSConfiguration);
-                
-                return aWSConfiguration;
+                var rsaConfiguration = new RSAConfiguration();
+                configuration.GetSection("Authentication").GetSection("RSA").Bind(rsaConfiguration);
+                return rsaConfiguration;
             });
 
-        appBuilder.Services
-            .AddSingleton(serviceProvider =>
-            {
-                var RSAConfiguration = new RSAConfiguration();
-                var RSAConfigurationSection = configuration.GetSection("Authentication").GetSection("RSA");
-                RSAConfigurationSection.Bind(RSAConfiguration);
-
-                return RSAConfiguration;
-            });
-
-        appBuilder.Services
+        builder.Services
             .AddTransient<ISecurityTokenValidator>(serviceProvider =>
             {
-                var RSAConfiguration = serviceProvider.GetRequiredService<RSAConfiguration>();
-
-                return new RsaSecurityTokenValidator(RSAConfiguration.ToParameters());
+                var rsaConfiguration = serviceProvider.GetRequiredService<RSAConfiguration>();
+                return new RsaSecurityTokenValidator(rsaConfiguration.ToParameters());
             });
 
-        appBuilder.Services.AddTransient<IPasswordValidator, PasswordValidator>();
+        builder.Services.AddTransient<IPasswordValidator, PasswordValidator>();
 
-        appBuilder.Services
+        builder.Services
             .AddTransient<ISecurityTokenGenerator, RSASHA512JWTGenerator>(serviceProvider =>
             {
-                var RSAConfiguration = serviceProvider.GetRequiredService<RSAConfiguration>();
-
-                return new RSASHA512JWTGenerator(RSAConfiguration.ToParameters());
+                var rsaConfiguration = serviceProvider.GetRequiredService<RSAConfiguration>();
+                return new RSASHA512JWTGenerator(rsaConfiguration.ToParameters());
             });
 
-        appBuilder.Services
-            .AddTransient<IRefreshTokenGenerator, RefreshTokenGenerator>(serviceProvider =>
-            {
-                return new RefreshTokenGenerator();
-            });
+        builder.Services
+            .AddTransient<IRefreshTokenGenerator, RefreshTokenGenerator>(_ => new RefreshTokenGenerator());
 
+        builder.Services.AddSingleton<IPasswordHasher, PBKDF2SHA512PasswordHasher>();
+        builder.Services.AddTransient<ILoginService, LoginService>();
+    }
+
+    private static void RegisterInfrastructureServices(WebApplicationBuilder builder, IConfiguration configuration)
+    {
         var requestLoggingConfig = configuration.GetSection("RequestLogging").Get<RequestLoggingConfiguration>() ?? new RequestLoggingConfiguration();
-        appBuilder.Services.AddSingleton(requestLoggingConfig);
+        builder.Services.AddSingleton(requestLoggingConfig);
 
-        appBuilder.Services.AddSingleton<IPasswordHasher, PBKDF2SHA512PasswordHasher>();
+        builder.Services.AddSingleton<IClock>(SystemClock.Instance);
+        builder.Services.AddSingleton<IValidateOptions<DatabaseBackupOptions>, DatabaseBackupOptionsValidator>();
+        builder.Services.AddSingleton<IValidateOptions<MediaProcessingOptions>, MediaProcessingOptionsValidator>();
 
-        appBuilder.Services.AddSingleton<IClock>(SystemClock.Instance);
+        builder.Services.Configure<ContactNotificationOptions>(configuration.GetSection("ContactNotifications"));
+        builder.Services.Configure<MediaDeliveryOptions>(configuration.GetSection("MediaDelivery"));
+        builder.Services.Configure<MediaStorageOptions>(configuration.GetSection("MediaStorage"));
+        builder.Services.Configure<DatabaseBackupOptions>(configuration.GetSection("DatabaseBackup"));
+    }
 
-        appBuilder.Services.AddSingleton<IValidateOptions<DatabaseBackupOptions>, DatabaseBackupOptionsValidator>();
-        appBuilder.Services.Configure<ContactNotificationOptions>(configuration.GetSection("ContactNotifications"));
-        appBuilder.Services.Configure<MediaDeliveryOptions>(configuration.GetSection("MediaDelivery"));
-        appBuilder.Services.Configure<MediaStorageOptions>(configuration.GetSection("MediaStorage"));
-        appBuilder.Services.Configure<DatabaseBackupOptions>(configuration.GetSection("DatabaseBackup"));
+    private static void RegisterAwsServices(WebApplicationBuilder builder, IConfiguration configuration)
+    {
+        builder.Services
+            .AddTransient(_ =>
+            {
+                var awsConfiguration = new AwsConfiguration();
+                configuration.GetSection("AWS").Bind(awsConfiguration);
+                return awsConfiguration;
+            });
 
-        var awsConfig = appBuilder.Configuration.GetSection("AWS").Get<AwsConfiguration>()!;
+        var awsConfig = configuration.GetSection("AWS").Get<AwsConfiguration>()!;
         var region = RegionEndpoint.GetBySystemName(awsConfig.Region);
 
-        // keep your current SES/S3 singletons...
-        appBuilder.Services.AddSingleton<IAmazonSimpleEmailServiceV2>(_ =>
+        builder.Services.AddSingleton<IAmazonSimpleEmailServiceV2>(_ =>
             new AmazonSimpleEmailServiceV2Client(
                 new BasicAWSCredentials(awsConfig.AccessKey, awsConfig.SecretKey),
-                new AmazonSimpleEmailServiceV2Config { RegionEndpoint = region, Timeout = TimeSpan.FromSeconds(8) }));
+                new AmazonSimpleEmailServiceV2Config { RegionEndpoint = region, Timeout = TimeSpan.FromSeconds(10) }));
 
-        appBuilder.Services.AddSingleton<IAmazonS3>(_ =>
+        builder.Services.AddSingleton<IAmazonS3>(_ =>
             new AmazonS3Client(
                 new BasicAWSCredentials(awsConfig.AccessKey, awsConfig.SecretKey),
-                new AmazonS3Config { RegionEndpoint = region, Timeout = TimeSpan.FromSeconds(8) }));
+                new AmazonS3Config { RegionEndpoint = region, Timeout = TimeSpan.FromMinutes(15) }));
 
-        // add STS for a cheap identity/auth check
-        appBuilder.Services.AddSingleton<IAmazonSecurityTokenService>(_ =>
+        builder.Services.AddSingleton<IAmazonSecurityTokenService>(_ =>
             new AmazonSecurityTokenServiceClient(
                 new BasicAWSCredentials(awsConfig.AccessKey, awsConfig.SecretKey),
-                new AmazonSecurityTokenServiceConfig { RegionEndpoint = region, Timeout = TimeSpan.FromSeconds(8) }));
+                new AmazonSecurityTokenServiceConfig { RegionEndpoint = region, Timeout = TimeSpan.FromSeconds(10) }));
 
-        // expose your AwsConfiguration as a singleton too (you already bind it elsewhere)
-        appBuilder.Services.AddSingleton(awsConfig);
+        builder.Services.AddSingleton(awsConfig);
+        builder.Services.AddSingleton<IS3Client, AwsS3Client>();
+        builder.Services.AddSingleton<IExternalProcessRunner, ExternalProcessRunner>();
+    }
 
-        appBuilder.Services.AddScoped<IMediaStorageService, MediaStorageService>();
-        appBuilder.Services.AddSingleton<IDatabaseBackupProcess, PgDumpDatabaseBackupProcess>();
-        appBuilder.Services.AddSingleton<IDatabaseBackupStorage, S3DatabaseBackupStorage>();
-        appBuilder.Services.AddSingleton<IDatabaseBackupCoordinator, DatabaseBackupCoordinator>();
+    private static void RegisterFeatureServices(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IMediaStorageService, MediaStorageService>();
+        builder.Services.AddSingleton<IDatabaseBackupProcess, PgDumpDatabaseBackupProcess>();
+        builder.Services.AddSingleton<IDatabaseBackupStorage, S3DatabaseBackupStorage>();
+        builder.Services.AddSingleton<IDatabaseBackupCoordinator, DatabaseBackupCoordinator>();
 
-        appBuilder.Services.AddSingleton<IContactSubmissionNotifier, SesContactSubmissionNotifier>();
-        appBuilder.Services.AddScoped<IContactSubmissionService, ContactSubmissionService>();
-        appBuilder.Services.AddScoped<IMediaQueryService, MediaQueryService>();
-        appBuilder.Services.AddScoped<IMediaAdminService, MediaAdminService>();
-        appBuilder.Services.AddScoped<IOrganizationContentService, OrganizationContentService>();
-        appBuilder.Services.AddScoped<IOrganizationAdminService, OrganizationAdminService>();
-        appBuilder.Services.AddSingleton<IMediaTranscoder, FfmpegMediaTranscoder>();
-        appBuilder.Services.AddScoped<IMediaProcessingCoordinator, MediaProcessingCoordinator>();
-        appBuilder.Services.AddHostedService<MediaProcessingHostedService>();
+        builder.Services.AddSingleton<IContactSubmissionNotifier, SesContactSubmissionNotifier>();
+        builder.Services.AddScoped<IContactSubmissionService, ContactSubmissionService>();
+        builder.Services.AddScoped<IMediaQueryService, MediaQueryService>();
+        builder.Services.AddScoped<IMediaAdminService, MediaAdminService>();
+        builder.Services.AddScoped<IImageOptimizer, ImageSharpImageOptimizer>();
+        builder.Services.AddScoped<IOrganizationContentService, OrganizationContentService>();
+        builder.Services.AddScoped<IOrganizationAdminService, OrganizationAdminService>();
+        builder.Services.AddSingleton<IMediaTranscoder, FfmpegMediaTranscoder>();
+        builder.Services.AddScoped<IMediaProcessingCoordinator, MediaProcessingCoordinator>();
+        builder.Services.AddScoped<MediaStorageBootstrapper>();
+    }
 
-        appBuilder.Services.AddHostedService<DatabaseBackupHostedService>();
+    private static void RegisterHostedServices(WebApplicationBuilder builder)
+    {
+        builder.Services.AddHostedService<MediaProcessingHostedService>();
+        builder.Services.AddHostedService<DatabaseBackupHostedService>();
+    }
 
-        appBuilder.Services.AddTransient<ILoginService, LoginService>();
+    private static void RegisterPresentationLayer(WebApplicationBuilder builder)
+    {
+        builder.Services.AddCors();
 
-        appBuilder.Services.AddCors();
-
-        appBuilder.Services
+        builder.Services
             .AddControllers()
             .AddNewtonsoftJson();
 
-        appBuilder.Services.AddRazorPages();
+        builder.Services.AddRazorPages();
+    }
 
-        appBuilder.Host.UseDefaultServiceProvider(options =>
+    private static void ConfigureServiceProvider(WebApplicationBuilder builder)
+    {
+        builder.Host.UseDefaultServiceProvider(options =>
         {
             options.ValidateScopes = true;
             options.ValidateOnBuild = true;
         });
+    }
 
-        WebApplication app = appBuilder.Build();
-
-        // Eager-initialize singletons (no side effects expected)
-        foreach (var sd in appBuilder.Services.Where(s => s.Lifetime == ServiceLifetime.Singleton))
-        {
-            if (sd.ServiceType.IsGenericTypeDefinition) continue;                 // open generic
-            if (sd.ServiceType == typeof(IEnumerable<>)) continue;                // meta
-            if (typeof(IHostedService).IsAssignableFrom(sd.ServiceType)) continue;// will be started by host
-            _ = app.Services.GetRequiredService(sd.ServiceType);
-        }
-
-        // Optionally probe scoped/transient constructions (non-eager usage check)
-        using (var scope = app.Services.CreateScope())
-        {
-            var sp = scope.ServiceProvider;
-            foreach (var sd in appBuilder.Services.Where(s =>
-                         s.Lifetime == ServiceLifetime.Scoped || s.Lifetime == ServiceLifetime.Transient))
-            {
-                if (sd.ServiceType.IsGenericTypeDefinition) continue;
-                if (sd.ServiceType == typeof(IEnumerable<>)) continue;
-                if (typeof(IHostedService).IsAssignableFrom(sd.ServiceType)) continue;
-
-                try { _ = sp.GetService(sd.ServiceType); } // use GetService to avoid fatal if optional
-                catch (Exception ex)
-                {
-                    // log + rethrow if you want to fail fast
-                    Log.Error(ex, "Failed to construct {Service}", sd.ServiceType);
-                    throw;
-                }
-            }
-        }
-
+    private static void ConfigureApplication(WebApplication app)
+    {
         var requestLoggingConfiguration = app.Services.GetRequiredService<RequestLoggingConfiguration>();
         if (requestLoggingConfiguration.Enabled)
         {
@@ -261,8 +299,12 @@ public class Program
                                 var uri = new Uri(referer, UriKind.RelativeOrAbsolute);
                                 referer = uri.GetLeftPart(UriPartial.Authority) + uri.AbsolutePath + uri.Query + uri.Fragment;
                             }
-                            catch { /* ignore malformed referers */ }
+                            catch
+                            {
+                                // ignore malformed referers
+                            }
                         }
+
                         if (!string.IsNullOrEmpty(referer))
                         {
                             diagnosticContext.Set("Referer", referer);
@@ -293,35 +335,117 @@ public class Program
         app.MapRazorPages();
 
         app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
+    }
 
-        using (var scope = app.Services.CreateScope())
+    private static void EnsureDatabasePrepared(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
+        var clock = scope.ServiceProvider.GetRequiredService<IClock>();
+
+        dbContext.Database.EnsureCreated();
+
+        if (dbContext.Database.IsRelational())
         {
-            var dbContext = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
-            var clock = scope.ServiceProvider.GetRequiredService<IClock>();
-
-            dbContext.Database.EnsureCreated();
-
-            if (dbContext.Database.IsRelational())
-            {
-                dbContext.Database.Migrate();
-            }
-
-            if (!dbContext.Users.Any())
-            {
-                dbContext.Users.AddRange(Constants.SystemUsers);
-                dbContext.SaveChanges();
-            }
-
-            MediaSeedData.EnsureSeedDataAsync(dbContext, clock).GetAwaiter().GetResult();
-            OrganizationSeedData.EnsureSeedDataAsync(dbContext, clock).GetAwaiter().GetResult();
+            dbContext.Database.Migrate();
         }
 
-        app.Run();
+        if (!dbContext.Users.Any())
+        {
+            dbContext.Users.AddRange(Constants.SystemUsers);
+            dbContext.SaveChanges();
+        }
 
+        var mediaBootstrapper = scope.ServiceProvider.GetRequiredService<MediaStorageBootstrapper>();
+        mediaBootstrapper.EnsureAsync().GetAwaiter().GetResult();
+
+        OrganizationSeedData.EnsureSeedDataAsync(dbContext, clock).GetAwaiter().GetResult();
+    }
+
+    private static void EagerInitializeSingletons(IServiceCollection services, IServiceProvider provider)
+    {
+        foreach (var descriptor in services.Where(s => s.Lifetime == ServiceLifetime.Singleton))
+        {
+            if (descriptor.ServiceType.IsGenericTypeDefinition)
+            {
+                continue;
+            }
+
+            if (descriptor.ServiceType == typeof(IEnumerable<>))
+            {
+                continue;
+            }
+
+            if (typeof(IHostedService).IsAssignableFrom(descriptor.ServiceType))
+            {
+                continue;
+            }
+
+            _ = provider.GetRequiredService(descriptor.ServiceType);
+        }
+    }
+
+    private static void ValidateServiceConstructions(IServiceCollection services, IServiceProvider provider)
+    {
+        using var scope = provider.CreateScope();
+        var scopedProvider = scope.ServiceProvider;
+
+        foreach (var descriptor in services.Where(s => s.Lifetime == ServiceLifetime.Scoped || s.Lifetime == ServiceLifetime.Transient))
+        {
+            if (descriptor.ServiceType.IsGenericTypeDefinition)
+            {
+                continue;
+            }
+
+            if (descriptor.ServiceType == typeof(IEnumerable<>))
+            {
+                continue;
+            }
+
+            if (typeof(IHostedService).IsAssignableFrom(descriptor.ServiceType))
+            {
+                continue;
+            }
+
+            try
+            {
+                _ = scopedProvider.GetService(descriptor.ServiceType);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Failed to construct {Service}", descriptor.ServiceType);
+                throw;
+            }
+        }
     }
 
     private static string SanitizePath(string path)
     {
         return System.Text.RegularExpressions.Regex.Replace(path, "[A-Fa-f0-9]{8,}-[A-Fa-f0-9-]{13,}", "***");
+    }
+
+    private static void WarmAwsClients(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var cancellationToken = cancellationTokenSource.Token;
+
+        var sesClient = scope.ServiceProvider.GetRequiredService<IAmazonSimpleEmailServiceV2>();
+        var s3Client = scope.ServiceProvider.GetRequiredService<IAmazonS3>();
+        var stsClient = scope.ServiceProvider.GetRequiredService<IAmazonSecurityTokenService>();
+
+        try
+        {
+            Task.WhenAll(
+                sesClient.GetAccountAsync(new GetAccountRequest(), cancellationToken),
+                s3Client.ListBucketsAsync(cancellationToken),
+                stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest(), cancellationToken)).GetAwaiter().GetResult();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to verify AWS credentials during startup.");
+            throw;
+        }
     }
 }

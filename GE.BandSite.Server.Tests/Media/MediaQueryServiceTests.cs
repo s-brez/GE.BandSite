@@ -39,8 +39,8 @@ public class MediaQueryServiceTests
                 Id = Guid.NewGuid(),
                 Title = "Video Home",
                 Description = "Highlight",
-                StoragePath = "videos/highlight.mp4",
-                PlaybackPath = "videos/highlight-processed.mp4",
+                StoragePath = "videos/originals/highlight.mov",
+                PlaybackPath = "videos/highlight_mp4.mp4",
                 PosterPath = "posters/highlight.jpg",
                 AssetType = MediaAssetType.Video,
                 ProcessingState = MediaProcessingState.Ready,
@@ -54,8 +54,10 @@ public class MediaQueryServiceTests
             {
                 Id = Guid.NewGuid(),
                 Title = "Photo Home",
-                StoragePath = "photos/home.jpg",
+                StoragePath = "images/originals/home.jpg",
+                PlaybackPath = "images/optimized/home_web.jpg",
                 AssetType = MediaAssetType.Photo,
+                ProcessingState = MediaProcessingState.Ready,
                 ShowOnHome = true,
                 IsPublished = true,
                 DisplayOrder = 1,
@@ -65,10 +67,10 @@ public class MediaQueryServiceTests
             {
                 Id = Guid.NewGuid(),
                 Title = "Gallery Video",
-                StoragePath = "videos/gallery.mp4",
+                StoragePath = "videos/originals/gallery.mov",
                 PosterPath = null,
                 AssetType = MediaAssetType.Video,
-                PlaybackPath = "videos/gallery-processed.mp4",
+                PlaybackPath = "videos/gallery_mp4.mp4",
                 ProcessingState = MediaProcessingState.Ready,
                 ShowOnHome = false,
                 IsPublished = true,
@@ -118,7 +120,7 @@ public class MediaQueryServiceTests
         {
             Assert.That(result.FeaturedVideo, Is.Not.Null);
             Assert.That(result.HighlightPhotos, Has.Count.EqualTo(1));
-            Assert.That(result.FeaturedVideo!.Url, Is.EqualTo("https://cdn.example.com/videos/highlight-processed.mp4"));
+            Assert.That(result.FeaturedVideo!.Url, Is.EqualTo("https://cdn.example.com/videos/highlight_mp4.mp4"));
             Assert.That(result.FeaturedVideo!.PosterUrl, Is.EqualTo("https://cdn.example.com/posters/highlight.jpg"));
         });
     }

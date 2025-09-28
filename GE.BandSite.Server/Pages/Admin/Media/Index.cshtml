@@ -66,6 +66,7 @@
             <tr>
                 <th>Title</th>
                 <th>Type</th>
+                <th>Delivery Path</th>
                 <th>Status</th>
                 <th>Featured</th>
                 <th>Processing</th>
@@ -81,6 +82,24 @@
                     <div><small>@asset.Description</small></div>
                 </td>
                 <td>@asset.AssetType</td>
+                <td>
+                    @if (asset.HasDeliveryPath)
+                    {
+                        <code class="admin-media__path">@asset.DeliveryPath</code>
+                    }
+                    else if (asset.ProcessingState == GE.BandSite.Database.Media.MediaProcessingState.Pending || asset.ProcessingState == GE.BandSite.Database.Media.MediaProcessingState.Processing)
+                    {
+                        <span class="admin-media__path admin-media__path--pending">Awaiting optimisation</span>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(asset.StoragePath))
+                    {
+                        <span class="admin-media__path admin-media__path--original">Original stored at @asset.StoragePath</span>
+                    }
+                    else
+                    {
+                        <span class="admin-media__path admin-media__path--original">No delivery path</span>
+                    }
+                </td>
                 <td>
                     <form method="post" asp-page-handler="Update" class="inline-form">
                         <input type="hidden" name="id" value="@asset.Id" />
