@@ -50,6 +50,8 @@
     - `GE.BandSite.Server/Features/Contact/ContactSubmissionService.cs`, DTOs, and DI registration.
     - `GE.BandSite.Database/Entities/ContactSubmission.cs` + context wiring.
     - Admin Razor Pages under `Pages/Admin/ContactSubmissions` for listing/deletion.
+  - **Enhancements**
+    - Admin-manageable contact notification recipients with multi-address support and SES integration coverage.
   - **Testing**
     - Unit: service persistence/validation/email builder.
     - Integration: POST `/Contact` stores record; admin list requires auth.

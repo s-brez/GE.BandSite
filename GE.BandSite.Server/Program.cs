@@ -226,7 +226,10 @@ public class Program
         builder.Services.AddSingleton<IDatabaseBackupStorage, S3DatabaseBackupStorage>();
         builder.Services.AddSingleton<IDatabaseBackupCoordinator, DatabaseBackupCoordinator>();
 
-        builder.Services.AddSingleton<IContactSubmissionNotifier, SesContactSubmissionNotifier>();
+        builder.Services.AddSingleton<ISesEmailClient, SesEmailClient>();
+        builder.Services.AddScoped<IContactNotificationSettingsService, ContactNotificationSettingsService>();
+        builder.Services.AddScoped<IContactNotificationRecipientProvider>(sp => sp.GetRequiredService<IContactNotificationSettingsService>());
+        builder.Services.AddScoped<IContactSubmissionNotifier, SesContactSubmissionNotifier>();
         builder.Services.AddScoped<IContactSubmissionService, ContactSubmissionService>();
         builder.Services.AddScoped<IMediaQueryService, MediaQueryService>();
         builder.Services.AddScoped<IMediaAdminService, MediaAdminService>();

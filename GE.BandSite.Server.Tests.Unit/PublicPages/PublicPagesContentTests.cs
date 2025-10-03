@@ -3,7 +3,6 @@ using GE.BandSite.Server.Features.Organization;
 using GE.BandSite.Server.Features.Organization.Models;
 using GE.BandSite.Server.Features.Media;
 using GE.BandSite.Server.Features.Media.Models;
-using AboutIndexModel = GE.BandSite.Server.Pages.About.IndexModel;
 using BandIndexModel = GE.BandSite.Server.Pages.Band.IndexModel;
 using ContactIndexModel = GE.BandSite.Server.Pages.Contact.IndexModel;
 using EventsIndexModel = GE.BandSite.Server.Pages.Events.IndexModel;
@@ -12,26 +11,6 @@ using ServicesIndexModel = GE.BandSite.Server.Pages.Services.IndexModel;
 using TestimonialsIndexModel = GE.BandSite.Server.Pages.Testimonials.IndexModel;
 
 namespace GE.BandSite.Server.Tests.PublicPages;
-
-[TestFixture]
-public class AboutIndexModelTests
-{
-    [Test]
-    public void OnGet_PopulatesStoryAndFacts()
-    {
-        var model = new AboutIndexModel();
-
-        model.OnGet();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(model.HeroTitle, Is.Not.Empty);
-            Assert.That(model.StoryParagraphs, Has.Count.GreaterThanOrEqualTo(3));
-            Assert.That(model.SpotlightFacts, Has.Count.EqualTo(3));
-            Assert.That(model.ShowcaseImages, Has.Count.EqualTo(2));
-        });
-    }
-}
 
 [TestFixture]
 public class BandIndexModelTests

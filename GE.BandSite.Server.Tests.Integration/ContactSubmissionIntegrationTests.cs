@@ -1,5 +1,7 @@
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Amazon.SimpleEmailV2.Model;
 using GE.BandSite.Database;
 using GE.BandSite.Server.Features.Contact;
 using GE.BandSite.Testing.Core;
@@ -35,6 +37,9 @@ public class ContactSubmissionIntegrationTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
         await db.Database.EnsureCreatedAsync();
+
+        var settings = scope.ServiceProvider.GetRequiredService<IContactNotificationSettingsService>();
+        await settings.UpdateRecipientsAsync(new[] { "sam@sdbgrop.io" }, CancellationToken.None);
     }
 
     [TearDown]
@@ -88,7 +93,16 @@ public class ContactSubmissionIntegrationTests
             Assert.That(stored.EventType, Is.EqualTo("Corporate Event"));
         });
 
-        Assert.That(_factory.Notifier.Notifications.Count, Is.EqualTo(1));
+        Assert.That(_factory.SesClient.Requests, Has.Count.EqualTo(1));
+        var request = _factory.SesClient.Requests.Single();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(request.FromEmailAddress, Is.EqualTo("notifications@swingtheboogie.com"));
+            Assert.That(request.Destination.ToAddresses, Is.EquivalentTo(new[] { "sam@sdbgrop.io" }));
+            Assert.That(request.Content?.Simple?.Subject?.Data, Is.EqualTo("New Swing The Boogie contact submission"));
+            Assert.That(request.Content?.Simple?.Body?.Html?.Data, Does.Contain("Jordan Hart"));
+        });
     }
 
     [Test]
@@ -124,10 +138,10 @@ public class ContactSubmissionIntegrationTests
         public ContactWebApplicationFactory(TestPostgresProvider postgres)
         {
             _postgres = postgres;
-            Notifier = new TestNotifier();
+            SesClient = new FakeSesEmailClient();
         }
 
-        public TestNotifier Notifier { get; }
+        public FakeSesEmailClient SesClient { get; }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -138,21 +152,43 @@ public class ContactSubmissionIntegrationTests
                     options.UseNpgsql(_postgres.ConnectionString, o => o.UseNodaTime()));
                 services.AddScoped<IGeBandSiteDbContext>(sp => sp.GetRequiredService<GeBandSiteDbContext>());
 
-                services.RemoveAll(typeof(IContactSubmissionNotifier));
-                services.AddSingleton<IContactSubmissionNotifier>(Notifier);
-                services.PostConfigure<ContactNotificationOptions>(options => options.Enabled = false);
+                services.RemoveAll(typeof(ISesEmailClient));
+                services.AddSingleton<ISesEmailClient>(SesClient);
+
+                services.PostConfigure<ContactNotificationOptions>(options =>
+                {
+                    options.Enabled = true;
+                    options.FromAddress = "notifications@swingtheboogie.com";
+                    options.Subject = "New Swing The Boogie contact submission";
+                });
             });
         }
     }
 
-    private sealed class TestNotifier : IContactSubmissionNotifier
+    private sealed class FakeSesEmailClient : ISesEmailClient
     {
-        public List<ContactSubmissionNotification> Notifications { get; } = new();
+        public List<SendEmailRequest> Requests { get; } = new();
 
-        public Task NotifyAsync(ContactSubmissionNotification notification, CancellationToken cancellationToken = default)
+        public Task<SendEmailResponse> SendEmailAsync(SendEmailRequest request, CancellationToken cancellationToken = default)
         {
-            Notifications.Add(notification);
-            return Task.CompletedTask;
+            Requests.Add(Clone(request));
+            return Task.FromResult(new SendEmailResponse
+            {
+                MessageId = Guid.NewGuid().ToString()
+            });
+        }
+
+        private static SendEmailRequest Clone(SendEmailRequest request)
+        {
+            return new SendEmailRequest
+            {
+                FromEmailAddress = request.FromEmailAddress,
+                Destination = new Destination
+                {
+                    ToAddresses = request.Destination?.ToAddresses != null ? new List<string>(request.Destination.ToAddresses) : new List<string>()
+                },
+                Content = request.Content
+            };
         }
     }
 }

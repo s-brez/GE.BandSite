@@ -19,6 +19,7 @@ public interface IGeBandSiteDbContext
     DbSet<User> Users { get; set; }
     DbSet<RefreshToken> RefreshTokens { get; set; }
     DbSet<ContactSubmission> ContactSubmissions { get; set; }
+    DbSet<ContactNotificationRecipient> ContactNotificationRecipients { get; set; }
     DbSet<Testimonial> Testimonials { get; set; }
     DbSet<EventListing> EventListings { get; set; }
     DbSet<BandMemberProfile> BandMembers { get; set; }
@@ -37,6 +38,8 @@ public class GeBandSiteDbContext : DbContext, IGeBandSiteDbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
     public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
+
+    public DbSet<ContactNotificationRecipient> ContactNotificationRecipients { get; set; } = null!;
 
     public DbSet<Testimonial> Testimonials { get; set; } = null!;
 

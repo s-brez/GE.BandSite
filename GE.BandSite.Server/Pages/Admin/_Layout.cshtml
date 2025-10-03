@@ -8,6 +8,7 @@
         new { Title = "Events", Url = Url.Page("/Admin/Events/Index"), Route = "/Admin/Events/Index" },
         new { Title = "Media", Url = Url.Page("/Admin/Media/Index"), Route = "/Admin/Media/Index" },
         new { Title = "Contact", Url = Url.Page("/Admin/ContactSubmissions/Index"), Route = "/Admin/ContactSubmissions/Index" },
+        new { Title = "Contact Notifications", Url = Url.Page("/Admin/ContactNotifications/Index"), Route = "/Admin/ContactNotifications/Index" },
     };
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
 }

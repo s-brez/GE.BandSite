@@ -11,17 +11,20 @@ namespace GE.BandSite.Server.Features.Contact;
 
 public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
 {
-    private readonly IAmazonSimpleEmailServiceV2 _sesClient;
+    private readonly ISesEmailClient _sesClient;
     private readonly IOptions<ContactNotificationOptions> _options;
+    private readonly IContactNotificationRecipientProvider _recipientProvider;
     private readonly ILogger<SesContactSubmissionNotifier> _logger;
 
     public SesContactSubmissionNotifier(
-        IAmazonSimpleEmailServiceV2 sesClient,
+        ISesEmailClient sesClient,
         IOptions<ContactNotificationOptions> options,
+        IContactNotificationRecipientProvider recipientProvider,
         ILogger<SesContactSubmissionNotifier> logger)
     {
         _sesClient = sesClient;
         _options = options;
+        _recipientProvider = recipientProvider;
         _logger = logger;
     }
 
@@ -34,9 +37,16 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(options.FromAddress) || string.IsNullOrWhiteSpace(options.ToAddress))
+        if (string.IsNullOrWhiteSpace(options.FromAddress))
         {
-            _logger.LogWarning("Contact submission notification skipped: sender or recipient not configured.");
+            _logger.LogWarning("Contact submission notification skipped: sender address not configured.");
+            return;
+        }
+
+        var recipients = await ResolveRecipientsAsync(options, cancellationToken).ConfigureAwait(false);
+        if (recipients.Count == 0)
+        {
+            _logger.LogWarning("Contact submission notification skipped: no recipients configured.");
             return;
         }
 
@@ -52,7 +62,7 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
             FromEmailAddress = options.FromAddress,
             Destination = new Destination
             {
-                ToAddresses = new List<string> { options.ToAddress }
+                ToAddresses = new List<string>(recipients)
             },
             Content = new EmailContent
             {
@@ -79,6 +89,28 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
 
         await _sesClient.SendEmailAsync(request, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Sent contact submission notification for {SubmissionId}.", notification.SubmissionId);
+    }
+
+    private async Task<IReadOnlyList<string>> ResolveRecipientsAsync(ContactNotificationOptions options, CancellationToken cancellationToken)
+    {
+        var recipients = await _recipientProvider.GetRecipientEmailsAsync(cancellationToken).ConfigureAwait(false);
+        if (recipients.Count > 0)
+        {
+            return recipients;
+        }
+
+        if (options.ToAddresses.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var fallback = options.ToAddresses
+            .Where(static address => !string.IsNullOrWhiteSpace(address))
+            .Select(static address => address.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return fallback.Length == 0 ? Array.Empty<string>() : fallback;
     }
 
     private static string BuildHtmlBody(ContactSubmissionNotification notification)
@@ -158,7 +190,27 @@ public sealed class ContactNotificationOptions
 
     public string? FromAddress { get; set; }
 
-    public string? ToAddress { get; set; }
+    public List<string> ToAddresses { get; set; } = new();
 
     public string? Subject { get; set; }
+}
+
+public interface ISesEmailClient
+{
+    Task<SendEmailResponse> SendEmailAsync(SendEmailRequest request, CancellationToken cancellationToken = default);
+}
+
+public sealed class SesEmailClient : ISesEmailClient
+{
+    private readonly IAmazonSimpleEmailServiceV2 _client;
+
+    public SesEmailClient(IAmazonSimpleEmailServiceV2 client)
+    {
+        _client = client;
+    }
+
+    public Task<SendEmailResponse> SendEmailAsync(SendEmailRequest request, CancellationToken cancellationToken = default)
+    {
+        return _client.SendEmailAsync(request, cancellationToken);
+    }
 }

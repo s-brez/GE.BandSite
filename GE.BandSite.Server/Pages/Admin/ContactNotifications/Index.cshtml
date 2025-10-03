@@ -1,0 +1,47 @@
+@page
+@model GE.BandSite.Server.Pages.Admin.ContactNotifications.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Contact Notifications";
+}
+
+<section class="admin-contact-settings">
+    <h1>Contact Notification Recipients</h1>
+    <p class="admin-contact-settings__intro">Configure who receives booking enquiries submitted through the public contact form.</p>
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="admin-contact-settings__status">@Model.StatusMessage</div>
+    }
+
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <div class="form-field">
+            <label asp-for="RecipientEntries"></label>
+            <textarea asp-for="RecipientEntries" rows="6" placeholder="Enter email addresses separated by commas, semicolons, or new lines"></textarea>
+            <span class="validation-message" asp-validation-for="RecipientEntries"></span>
+        </div>
+        <button type="submit" class="button button--primary">Save Recipients</button>
+    </form>
+
+    <section class="admin-contact-settings__list">
+        <h2>Current Recipients</h2>
+        @if (Model.Recipients.Count == 0)
+        {
+            <p>No recipients configured. Email notifications remain disabled until at least one address is saved.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var recipient in Model.Recipients)
+                {
+                    <li>@recipient</li>
+                }
+            </ul>
+        }
+    </section>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
