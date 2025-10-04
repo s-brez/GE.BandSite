@@ -47,6 +47,22 @@ public class MediaQueryServiceTests
                 IsFeatured = true,
                 ShowOnHome = true,
                 IsPublished = true,
+                DisplayOrder = 5,
+                CreatedAt = now
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Title = "Video Home Secondary",
+                Description = "Secondary highlight",
+                StoragePath = "videos/originals/home-secondary.mov",
+                PlaybackPath = "videos/home_secondary_mp4.mp4",
+                PosterPath = null,
+                AssetType = MediaAssetType.Video,
+                ProcessingState = MediaProcessingState.Ready,
+                IsFeatured = false,
+                ShowOnHome = true,
+                IsPublished = true,
                 DisplayOrder = 0,
                 CreatedAt = now
             },
@@ -74,7 +90,7 @@ public class MediaQueryServiceTests
                 ProcessingState = MediaProcessingState.Ready,
                 ShowOnHome = false,
                 IsPublished = true,
-                DisplayOrder = 2,
+                DisplayOrder = 1,
                 CreatedAt = now
             },
             new()
@@ -120,6 +136,7 @@ public class MediaQueryServiceTests
         {
             Assert.That(result.FeaturedVideo, Is.Not.Null);
             Assert.That(result.HighlightPhotos, Has.Count.EqualTo(1));
+            Assert.That(result.FeaturedVideo!.Title, Is.EqualTo("Video Home"));
             Assert.That(result.FeaturedVideo!.Url, Is.EqualTo("https://cdn.example.com/videos/highlight_mp4.mp4"));
             Assert.That(result.FeaturedVideo!.PosterUrl, Is.EqualTo("https://cdn.example.com/posters/highlight.jpg"));
         });
@@ -132,9 +149,10 @@ public class MediaQueryServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.Videos, Has.Count.EqualTo(2));
+            Assert.That(result.Videos, Has.Count.EqualTo(3));
             Assert.That(result.Photos, Has.Count.EqualTo(1));
             Assert.That(result.Videos.Any(v => v.Title == "Unpublished"), Is.False);
+            Assert.That(result.Videos.First().Title, Is.EqualTo("Video Home"));
         });
     }
 }

@@ -4,6 +4,7 @@ using GE.BandSite.Server.Configuration;
 using GE.BandSite.Server.Features.Media.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace GE.BandSite.Server.Features.Media;
 
@@ -32,17 +33,24 @@ public sealed class MediaQueryService : IMediaQueryService
                 x.PosterPath,
                 x.AssetType,
                 x.MediaAssetTags.Select(t => t.MediaTag.Name),
-                x.ProcessingState))
+                x.ProcessingState,
+                x.IsFeatured,
+                x.DisplayOrder))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var featuredVideo = assets
             .Where(x => x.AssetType == MediaAssetType.Video && x.ProcessingState == MediaProcessingState.Ready)
+            .OrderByDescending(x => x.IsFeatured)
+            .ThenBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
             .Select(Map)
             .FirstOrDefault();
 
         var highlightPhotos = assets
             .Where(x => x.AssetType == MediaAssetType.Photo && x.ProcessingState == MediaProcessingState.Ready)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
             .Select(Map)
             .ToList();
 
@@ -63,17 +71,24 @@ public sealed class MediaQueryService : IMediaQueryService
                 x.PosterPath,
                 x.AssetType,
                 x.MediaAssetTags.Select(t => t.MediaTag.Name),
-                x.ProcessingState))
+                x.ProcessingState,
+                x.IsFeatured,
+                x.DisplayOrder))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var videos = assets
             .Where(x => x.AssetType == MediaAssetType.Video && x.ProcessingState == MediaProcessingState.Ready)
+            .OrderByDescending(x => x.IsFeatured)
+            .ThenBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
             .Select(Map)
             .ToList();
 
         var photos = assets
             .Where(x => x.AssetType == MediaAssetType.Photo && x.ProcessingState == MediaProcessingState.Ready)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
             .Select(Map)
             .ToList();
 
@@ -129,4 +144,6 @@ internal sealed record MediaAssetProjection(
     string? PosterPath,
     MediaAssetType AssetType,
     IEnumerable<string> Tags,
-    MediaProcessingState ProcessingState);
+    MediaProcessingState ProcessingState,
+    bool IsFeatured,
+    int DisplayOrder);

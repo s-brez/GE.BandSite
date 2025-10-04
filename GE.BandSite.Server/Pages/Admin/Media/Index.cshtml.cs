@@ -42,13 +42,14 @@ public class IndexModel : PageModel
             .ConfigureAwait(false);
     }
 
-    public async Task<IActionResult> OnPostUpdateAsync(Guid id, bool isPublished, bool showOnHome)
+    public async Task<IActionResult> OnPostUpdateAsync(Guid id, bool isPublished, bool showOnHome, bool isFeatured)
     {
         var asset = await _dbContext.MediaAssets.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
         if (asset != null)
         {
             asset.IsPublished = isPublished;
             asset.ShowOnHome = showOnHome;
+            asset.IsFeatured = isFeatured;
             await _dbContext.SaveChangesAsync().ConfigureAwait(false);
         }
 

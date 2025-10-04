@@ -106,6 +106,7 @@
     - Integration: simulate upload + metadata update -> processing pipeline marks ready.
   - **Acceptance Criteria**
     - Staff can upload/manage media end-to-end; processing status visible; publish/unpublish toggles reflect on public site.
+    - [x] Media placement checkboxes persist and drive media/home hero selections.
 
 - [x] Stage 8: Operations Hardening
   - **Scope**

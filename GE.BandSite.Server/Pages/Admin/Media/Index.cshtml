@@ -67,10 +67,11 @@
                 <th>Title</th>
                 <th>Type</th>
                 <th>Delivery Path</th>
-                <th>Status</th>
-                <th>Featured</th>
+                <th>Publish</th>
+                <th>Media Feature</th>
+                <th>Home Feature</th>
                 <th>Processing</th>
-                <th></th>
+                <th>Display Order</th>
             </tr>
         </thead>
         <tbody>
@@ -104,6 +105,7 @@
                     <form method="post" asp-page-handler="Update" class="inline-form">
                         <input type="hidden" name="id" value="@asset.Id" />
                         <input type="hidden" name="showOnHome" value="@asset.ShowOnHome" />
+                        <input type="hidden" name="isFeatured" value="@asset.IsFeatured" />
                         <label>
                             <input type="checkbox" name="isPublished" value="true" @(asset.IsPublished ? "checked" : string.Empty) onchange="this.form.submit()" /> Publish
                         </label>
@@ -113,6 +115,17 @@
                     <form method="post" asp-page-handler="Update" class="inline-form">
                         <input type="hidden" name="id" value="@asset.Id" />
                         <input type="hidden" name="isPublished" value="@asset.IsPublished" />
+                        <input type="hidden" name="showOnHome" value="@asset.ShowOnHome" />
+                        <label>
+                            <input type="checkbox" name="isFeatured" value="true" @(asset.IsFeatured ? "checked" : string.Empty) onchange="this.form.submit()" /> Feature on Media
+                        </label>
+                    </form>
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Update" class="inline-form">
+                        <input type="hidden" name="id" value="@asset.Id" />
+                        <input type="hidden" name="isPublished" value="@asset.IsPublished" />
+                        <input type="hidden" name="isFeatured" value="@asset.IsFeatured" />
                         <label>
                             <input type="checkbox" name="showOnHome" value="true" @(asset.ShowOnHome ? "checked" : string.Empty) onchange="this.form.submit()" /> Home Feature
                         </label>
