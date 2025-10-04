@@ -70,6 +70,7 @@
     - Integration test ensuring `/Media` returns CloudFront URLs.
   - **Acceptance Criteria**
     - Public pages display data exclusively from DB; no inline media definitions remain.
+    - [x] Media gallery thumbnails adapt to asset aspect ratio and expand with a lightbox preview.
 
 - [x] Stage 5: Video Processing Backbone
   - **Scope**
@@ -93,6 +94,7 @@
     - Integration tests covering login, session persistence, access control.
   - **Acceptance Criteria**
     - Admin users can log in/out, navigate admin dashboard, edit datasets; all admin routes secured.
+  - [x] Admin password reset emails via SES with request + tokenized reset pages reusing existing hashing/validation services.
 
 - [x] Stage 7: Media Upload Interface
   - **Scope**

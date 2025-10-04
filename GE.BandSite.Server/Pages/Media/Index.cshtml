@@ -37,8 +37,17 @@
         <div class="media-gallery__grid">
             @foreach (var photo in Model.PhotoGallery)
             {
-                <figure class="media-card">
-                    <img src="@photo.Url" alt="@photo.Title" />
+                <figure
+                    class="media-card"
+                    data-media-type="image"
+                    data-media-src="@photo.Url"
+                    data-media-title="@photo.Title"
+                    data-media-description="@photo.Description">
+                    <button type="button" class="media-card__trigger" aria-label="View photo: @photo.Title">
+                        <span class="media-card__thumb">
+                            <img src="@photo.Url" alt="@photo.Title" loading="lazy" />
+                        </span>
+                    </button>
                     <figcaption>@photo.Title</figcaption>
                 </figure>
             }
@@ -52,11 +61,39 @@
         <div class="media-gallery__grid media-gallery__grid--videos">
             @foreach (var video in Model.VideoGallery)
             {
-                <figure class="media-card media-card--video">
-                    <img src="@(string.IsNullOrWhiteSpace(video.PosterUrl) ? "/images/media-video-poster.svg" : video.PosterUrl)" alt="@video.Title" />
+                var posterUrl = string.IsNullOrWhiteSpace(video.PosterUrl) ? "/images/media-video-poster.svg" : video.PosterUrl;
+                <figure
+                    class="media-card media-card--video"
+                    data-media-type="video"
+                    data-media-src="@video.Url"
+                    data-media-poster="@posterUrl"
+                    data-media-title="@video.Title"
+                    data-media-description="@video.Description">
+                    <button type="button" class="media-card__trigger" aria-label="Watch video: @video.Title">
+                        <span class="media-card__thumb">
+                            <img src="@posterUrl" alt="@video.Title" loading="lazy" />
+                        </span>
+                    </button>
                     <figcaption>@video.Title</figcaption>
                 </figure>
             }
         </div>
     </section>
+
+    <div class="media-lightbox" data-active="false" aria-hidden="true">
+        <div class="media-lightbox__backdrop" data-lightbox-close></div>
+        <div class="media-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Preview media" tabindex="-1">
+            <button type="button" class="media-lightbox__close" data-lightbox-close aria-label="Close media preview">Close</button>
+            <div class="media-lightbox__stage"></div>
+            <div class="media-lightbox__details">
+                <h3 class="media-lightbox__title"></h3>
+                <p class="media-lightbox__description"></p>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts
+{
+    <script src="~/js/media-page.js" asp-append-version="true"></script>
+}

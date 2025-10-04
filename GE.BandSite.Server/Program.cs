@@ -181,6 +181,7 @@ public class Program
         builder.Services.AddSingleton<IValidateOptions<MediaProcessingOptions>, MediaProcessingOptionsValidator>();
 
         builder.Services.Configure<ContactNotificationOptions>(configuration.GetSection("ContactNotifications"));
+        builder.Services.Configure<PasswordResetOptions>(configuration.GetSection("PasswordReset"));
         builder.Services.Configure<MediaDeliveryOptions>(configuration.GetSection("MediaDelivery"));
         builder.Services.Configure<MediaStorageOptions>(configuration.GetSection("MediaStorage"));
         builder.Services.Configure<DatabaseBackupOptions>(configuration.GetSection("DatabaseBackup"));
@@ -227,6 +228,7 @@ public class Program
         builder.Services.AddSingleton<IDatabaseBackupCoordinator, DatabaseBackupCoordinator>();
 
         builder.Services.AddSingleton<ISesEmailClient, SesEmailClient>();
+        builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
         builder.Services.AddScoped<IContactNotificationSettingsService, ContactNotificationSettingsService>();
         builder.Services.AddScoped<IContactNotificationRecipientProvider>(sp => sp.GetRequiredService<IContactNotificationSettingsService>());
         builder.Services.AddScoped<IContactSubmissionNotifier, SesContactSubmissionNotifier>();

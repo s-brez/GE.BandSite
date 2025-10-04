@@ -18,6 +18,7 @@ public interface IGeBandSiteDbContext
 
     DbSet<User> Users { get; set; }
     DbSet<RefreshToken> RefreshTokens { get; set; }
+    DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
     DbSet<ContactSubmission> ContactSubmissions { get; set; }
     DbSet<ContactNotificationRecipient> ContactNotificationRecipients { get; set; }
     DbSet<Testimonial> Testimonials { get; set; }
@@ -36,6 +37,8 @@ public class GeBandSiteDbContext : DbContext, IGeBandSiteDbContext
     public DbSet<User> Users { get; set; } = null!;
 
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+
+    public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } = null!;
 
     public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
 

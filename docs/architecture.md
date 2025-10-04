@@ -80,4 +80,4 @@ Single EC2 origin running Kestrel + ASP.NET 9.0
 - Enforce least-privilege access to admin features with the provided email/password authentication stack. No MFA or external identity provider in MVP; all public pages remain anonymous.
 - Encrypt all sensitive data at rest (PostgreSQL disk volume encryption + S3 default encryption) and in transit (TLS).
 - Contact submissions persist to PostgreSQL and trigger transactional email notifications via Amazon SES ([aws.amazon.com/ses](https://aws.amazon.com/ses/)). Limit stored personal data to required fields and provide a purge mechanism if retention policies demand it.
-
+- Admin password resets dispatch SES-backed, single-use links. Tokens are hashed, expire quickly, and reuse the existing PBKDF2 password hashing/validation services to avoid duplicate cryptography implementations.
