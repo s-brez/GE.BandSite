@@ -44,4 +44,5 @@ icacls "$env:USERPROFILE\.ssh\ge_band_site.pem" /inheritance:r /grant:r "$($env:
 ssh ubuntu@3.26.71.203 -i .\ge_band_site.pem
 
 sudo journalctl -u ge-band-site -f -n 100
+sudo tail -f /var/www/ge-band-site/Logs/ge_band_site_*.log
 ```

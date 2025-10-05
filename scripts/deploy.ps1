@@ -130,6 +130,9 @@ if ($recipientValues.Count -gt 0) {
     }
 }
 
+$flat["MediaProcessing__FfmpegPath"] = "/usr/bin/ffmpeg"
+$flat["MediaProcessing__FfprobePath"] = "/usr/bin/ffprobe"
+
 function Set-IfPresent {
     param(
         [string]$Key,
@@ -240,7 +243,7 @@ if ! command -v dotnet >/dev/null 2>&1; then
 fi
 
 sudo apt-get update -y
-sudo apt-get install -y postgresql git rsync curl
+sudo apt-get install -y postgresql git rsync curl ffmpeg
 
 if ! /usr/share/dotnet/dotnet --info >/dev/null 2>&1; then
   sudo bash -c 'curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0 --install-dir /usr/share/dotnet --no-path'
