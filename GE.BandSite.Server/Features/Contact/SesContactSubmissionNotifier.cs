@@ -87,8 +87,11 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
             }
         };
 
-        await _sesClient.SendEmailAsync(request, cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Sent contact submission notification for {SubmissionId}.", notification.SubmissionId);
+        var response = await _sesClient.SendEmailAsync(request, cancellationToken).ConfigureAwait(false);
+        _logger.LogInformation(
+            "Sent contact submission notification for {SubmissionId}. SES MessageId: {MessageId}.",
+            notification.SubmissionId,
+            response.MessageId);
     }
 
     private async Task<IReadOnlyList<string>> ResolveRecipientsAsync(ContactNotificationOptions options, CancellationToken cancellationToken)

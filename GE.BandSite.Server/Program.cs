@@ -1,4 +1,5 @@
 using Amazon;
+using System.Linq;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
@@ -185,19 +186,50 @@ public class Program
         builder.Services.Configure<MediaDeliveryOptions>(configuration.GetSection("MediaDelivery"));
         builder.Services.Configure<MediaStorageOptions>(configuration.GetSection("MediaStorage"));
         builder.Services.Configure<DatabaseBackupOptions>(configuration.GetSection("DatabaseBackup"));
+
+        builder.Services.PostConfigure<ContactNotificationOptions>(options =>
+        {
+            var enabledValue = configuration["CONTACT_NOTIFICATIONS_ENABLED"];
+            if (!string.IsNullOrWhiteSpace(enabledValue) && bool.TryParse(enabledValue, out var enabled))
+            {
+                options.Enabled = enabled;
+            }
+
+            var fromAddress = configuration["CONTACT_NOTIFICATIONS_FROM_ADDRESS"];
+            if (string.IsNullOrWhiteSpace(options.FromAddress) && !string.IsNullOrWhiteSpace(fromAddress))
+            {
+                options.FromAddress = fromAddress.Trim();
+            }
+
+            var subject = configuration["CONTACT_NOTIFICATIONS_SUBJECT"];
+            if (string.IsNullOrWhiteSpace(options.Subject) && !string.IsNullOrWhiteSpace(subject))
+            {
+                options.Subject = subject.Trim();
+            }
+
+            var recipientsValue = configuration["CONTACT_NOTIFICATIONS_RECIPIENTS"];
+            if (options.ToAddresses.Count == 0 && !string.IsNullOrWhiteSpace(recipientsValue))
+            {
+                var recipients = recipientsValue
+                    .Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(static value => value.Trim())
+                    .Where(static value => value.Length > 0)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (recipients.Count > 0)
+                {
+                    options.ToAddresses = recipients;
+                }
+            }
+        });
     }
 
     private static void RegisterAwsServices(WebApplicationBuilder builder, IConfiguration configuration)
     {
-        builder.Services
-            .AddTransient(_ =>
-            {
-                var awsConfiguration = new AwsConfiguration();
-                configuration.GetSection("AWS").Bind(awsConfiguration);
-                return awsConfiguration;
-            });
+        var awsConfig = AwsConfiguration.FromConfiguration(configuration);
 
-        var awsConfig = configuration.GetSection("AWS").Get<AwsConfiguration>()!;
+        builder.Services.AddSingleton(_ => awsConfig);
         var region = RegionEndpoint.GetBySystemName(awsConfig.Region);
 
         builder.Services.AddSingleton<IAmazonSimpleEmailServiceV2>(_ =>

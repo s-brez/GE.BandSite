@@ -55,6 +55,7 @@
   - **Testing**
     - Unit: service persistence/validation/email builder.
     - Integration: POST `/Contact` stores record; admin list requires auth.
+    - [x] Explicit SES integration test dispatches a live contact notification (run `ContactSubmissionSesLiveTests` once per credentials rotation).
   - **Acceptance Criteria**
     - Valid submissions store data + email via SES; errors return user-friendly validation messages.
     - Admin listing shows entries and supports deletion.

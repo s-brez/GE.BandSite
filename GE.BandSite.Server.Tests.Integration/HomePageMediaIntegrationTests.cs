@@ -21,8 +21,7 @@ public static class HomePageMediaIntegrationTests
     public static async Task PromoVideo_S3Object_AllowsRangedDownload()
     {
         var configuration = BuildConfiguration();
-        var awsConfig = configuration.GetSection("AWS").Get<AwsConfiguration>()
-            ?? throw new InvalidOperationException("AWS configuration is missing. Ensure user secrets are available in the test environment.");
+        var awsConfig = AwsConfiguration.FromConfiguration(configuration);
 
         var credentials = new BasicAWSCredentials(awsConfig.AccessKey, awsConfig.SecretKey);
         var region = RegionEndpoint.GetBySystemName(awsConfig.Region);

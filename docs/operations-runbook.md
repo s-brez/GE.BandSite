@@ -1,11 +1,10 @@
 # Operations Runbook
 
 ## Routine Deployment
-- Confirm the target EC2 instance has the latest container image or published build artifact staged. Pull from the protected artifact bucket if updates were pushed by CI in the last 24 hours.
-- Validate Route 53 health checks are green before touching the host. If any are failing, pause and investigate CloudWatch alarms first.
-- On the EC2 instance, stop the `ge-band-site` systemd unit, deploy the new binaries to `/var/www/ge-band-site`, and restart the service. Always tail `journalctl -u ge-band-site -f` for 2–3 minutes after restart to confirm a healthy boot.
+- Run `pwsh ./scripts/deploy.ps1 -HostName <ec2-dns>` from the repo root. The script synchronises secrets, runs migrations, publishes, and restarts the systemd unit; it also captures a timestamped `pg_dump` (keeps 14 days by default).
+- Watch the script output: it streams the last 100 lines from `journalctl -u ge-band-site` after restart. Cancel if errors appear and roll back via `git checkout <prev commit>` followed by another deployment.
 - Issue an `aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html"` when public Razor Pages contain content updates. Static assets that ship with hashed filenames do not require invalidations.
-- Run a smoke test: browse `/`, `/Media`, `/Admin`, and submit a contact form (directed to staging SES identity). Check the application logs for warnings.
+- Smoke test CloudFront (`https://www.swingtheboogie.com`) for `/`, `/Media`, `/Admin`, and the contact form. Check application logs for warnings and watch the CloudFront dashboard for origin errors.
 
 ## Rollback Procedure
 - Keep the previously deployed build in `/var/www/ge-band-site/releases/<timestamp>` with a matching systemd unit. To roll back, switch the active symlink to the prior release, restart the service, and invalidate `/index.html` on CloudFront.
@@ -36,8 +35,16 @@
 
 ## Email Notifications (SES)
 - Contact form notifications use Amazon SES in `us-east-1`. Verify the sending identity remains in production mode and monitor bounce/complaint metrics using the SES console (see [SES sending activity monitoring](https://docs.aws.amazon.com/ses/latest/dg/monitor-sending-activity.html)).
+- Application instances require `AWS_SES_ACCESS_KEY_ID`, `AWS_SES_SECRET_ACCESS_KEY`, and `AWS_SES_REGION` (or the standard `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_REGION`) to authenticate. For local development, store them with `dotnet user-secrets`; for production, inject via the process manager/environment.
+- Configure `CONTACT_NOTIFICATIONS_FROM_ADDRESS`, `CONTACT_NOTIFICATIONS_RECIPIENTS`, and optionally `CONTACT_NOTIFICATIONS_SUBJECT`/`CONTACT_NOTIFICATIONS_ENABLED` before deployment. Recipients should be semicolon- or newline-delimited and include every admin forwarding target.
 - Update the configured sender and reply-to addresses via `ContactNotifications` settings. When rotating, re-run SES verification for the new address or domain before deploying.
+- After rotating credentials or sender addresses, execute the explicit integration test `ContactSubmissionSesLiveTests.SubmitContactForm_SendsLiveEmail` to validate end-to-end delivery. The test will skip automatically when credentials or contact notification environment variables are absent.
 - If email sending fails, throttle contact submissions by temporarily disabling the form (set `ContactNotifications:Enabled=false`) until SES access is restored. Resume once deliverability metrics stabilize.
+
+## CloudFront & DNS
+- CloudFront distribution `cf-swingtheboogie` fronts both static media (S3 origin) and the web app (EC2 origin). Default behaviour `/*` should target the EC2 origin with caching disabled; `/media/*` stays mapped to the S3 origin.
+- GoDaddy DNS: `www` CNAME → `d2r0vyil5uhr44.cloudfront.net`; apex uses GoDaddy forwarding to `https://www.swingtheboogie.com` until Route 53 takes over after the domain transfer lock.
+- Security groups must keep TCP/80 open so CloudFront can reach the Kestrel origin.
 
 ## CloudFront, Route 53, and Health Checks
 - CloudFront should be configured with Origin Shield and the correct origin access control. Validate origins quarterly using `aws cloudfront get-distribution-config` and compare against the architecture doc.
