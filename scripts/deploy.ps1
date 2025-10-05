@@ -67,37 +67,46 @@ function Flatten-Secrets {
         [System.Collections.Generic.Dictionary[string,string]]$Accumulator
     )
 
-    switch ($Node) {
-        { $_ -is [System.Collections.IDictionary] } {
-            foreach ($key in $_.Keys) {
-                $value = $_[$key]
-                $childPrefix = if ($Prefix) { "$Prefix__$key" } else { [string]$key }
-                Flatten-Secrets -Node $value -Prefix $childPrefix -Accumulator $Accumulator
-            }
+    if ($null -eq $Node) {
+        return
+    }
+
+    if ($Node -is [System.Collections.IDictionary]) {
+        foreach ($key in $Node.Keys) {
+            $value = $Node[$key]
+            $childPrefix = if ($Prefix) { '{0}__{1}' -f $Prefix, $key } else { [string]$key }
+            Flatten-Secrets -Node $value -Prefix $childPrefix -Accumulator $Accumulator
         }
-        { $_ -is [System.Collections.IEnumerable] -and -not ($_ -is [string]) } {
-            $index = 0
-            foreach ($item in $_) {
-                $childPrefix = if ($Prefix) { "$Prefix__$index" } else { [string]$index }
-                Flatten-Secrets -Node $item -Prefix $childPrefix -Accumulator $Accumulator
-                $index++
-            }
+        return
+    }
+
+    if ($Node -is [System.Collections.IEnumerable] -and -not ($Node -is [string])) {
+        $index = 0
+        foreach ($item in $Node) {
+            $childPrefix = if ($Prefix) { '{0}__{1}' -f $Prefix, $index } else { [string]$index }
+            Flatten-Secrets -Node $item -Prefix $childPrefix -Accumulator $Accumulator
+            $index++
         }
-        default {
-            if ($null -ne $Node -and $Prefix) {
-                $value = switch ($Node) {
-                    { $_ -is [bool] } { if ($_ ) { "true" } else { "false" } }
-                    default { [string]$_ }
-                }
-                $Accumulator[$Prefix] = $value
-            }
+        return
+    }
+
+    if ($Prefix) {
+        $value = switch ($Node) {
+            { $_ -is [bool] } { if ($_ ) { "true" } else { "false" } }
+            default { [string]$_ }
         }
+        $Accumulator[$Prefix] = $value
     }
 }
 
-$secretsJson = Get-Content -LiteralPath $secretsPath -Raw | ConvertFrom-Json -Depth 100
+$secretsJson = Get-Content -LiteralPath $secretsPath -Raw | ConvertFrom-Json -Depth 100 -AsHashtable
 $flat = [System.Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
 Flatten-Secrets -Node $secretsJson -Accumulator $flat -Prefix ""
+
+Write-Host "Secrets exported: $($flat.Count)"
+if ($flat.Count -eq 0) {
+    throw "secrets.json did not yield any configuration values"
+}
 
 # Normalise contact notification recipients (support legacy ToAddress or array)
 $recipientValues = @()
@@ -184,6 +193,9 @@ function ConvertTo-EnvContent {
 }
 
 $envContent = ConvertTo-EnvContent -Data $flat
+if ([string]::IsNullOrWhiteSpace($envContent)) {
+    throw "Generated environment file is empty; check secrets.json"
+}
 $tempEnv = New-TemporaryFile
 Write-UnixFile -Path $tempEnv -Content $envContent
 

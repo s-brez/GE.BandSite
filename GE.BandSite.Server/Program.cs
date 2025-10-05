@@ -18,14 +18,19 @@ using GE.BandSite.Server.Features.Media.Storage;
 using GE.BandSite.Server.Features.Operations.Backups;
 using GE.BandSite.Server.Features.Organization;
 using GE.BandSite.Server.Services;
-using GE.BandSite.Server.Services.Storage;
 using GE.BandSite.Server.Services.Processes;
+using GE.BandSite.Server.Services.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using NodaTime;
+using Npgsql;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using System.Data;
 
 namespace GE.BandSite.Server;
 
@@ -380,11 +385,14 @@ public class Program
         var dbContext = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
 
-        dbContext.Database.EnsureCreated();
-
         if (dbContext.Database.IsRelational())
         {
-            dbContext.Database.Migrate();
+            EnsureRelationalDatabasePrepared(dbContext);
+        }
+        else
+        {
+            var created = dbContext.Database.EnsureCreated();
+            Log.Information("EnsureCreated completed for non-relational provider; databaseCreated={DatabaseCreated}", created);
         }
 
         if (!dbContext.Users.Any())
@@ -397,6 +405,125 @@ public class Program
         mediaBootstrapper.EnsureAsync().GetAwaiter().GetResult();
 
         OrganizationSeedData.EnsureSeedDataAsync(dbContext, clock).GetAwaiter().GetResult();
+    }
+
+    private static void EnsureDatabaseSchemas(GeBandSiteDbContext dbContext)
+    {
+        var schemas = new[]
+        {
+            Schemas.Organization,
+            Schemas.Authentication,
+            Schemas.Media
+        };
+
+        foreach (var schema in schemas)
+        {
+            var command = $"CREATE SCHEMA IF NOT EXISTS \"{schema}\"";
+            Log.Information("Ensuring PostgreSQL schema {Schema}", schema);
+            dbContext.Database.ExecuteSqlRaw(command);
+        }
+    }
+
+    private static void EnsureRelationalDatabasePrepared(GeBandSiteDbContext dbContext)
+    {
+        var databaseCreator = dbContext.Database.GetService<IRelationalDatabaseCreator>();
+
+        if (!databaseCreator.Exists())
+        {
+            var databaseName = dbContext.Database.GetDbConnection().Database;
+            Log.Information("Database {DatabaseName} does not exist; creating", databaseName);
+            databaseCreator.Create();
+        }
+
+        EnsureDatabaseSchemas(dbContext);
+
+        var databaseCreated = dbContext.Database.EnsureCreated();
+        Log.Information("EnsureCreated completed; databaseCreated={DatabaseCreated}", databaseCreated);
+
+        var missingTables = GetMissingTables(dbContext);
+        if (missingTables.Count == 0)
+        {
+            Log.Information("All EF Core tables detected after EnsureCreated");
+            return;
+        }
+
+        Log.Warning("Missing tables detected after EnsureCreated; attempting CreateTables: {MissingTables}", string.Join(", ", missingTables));
+
+        try
+        {
+            databaseCreator.CreateTables();
+        }
+        catch (PostgresException exception) when (string.Equals(exception.SqlState, PostgresErrorCodes.DuplicateTable, StringComparison.Ordinal))
+        {
+            Log.Warning(exception, "CreateTables reported duplicate tables; continuing");
+        }
+
+        missingTables = GetMissingTables(dbContext);
+        if (missingTables.Count > 0)
+        {
+            throw new InvalidOperationException($"Failed to create required tables: {string.Join(", ", missingTables)}");
+        }
+
+        Log.Information("All EF Core tables detected after CreateTables");
+    }
+
+    private static IReadOnlyCollection<string> GetMissingTables(GeBandSiteDbContext dbContext)
+    {
+        var entityTables = dbContext.Model
+            .GetEntityTypes()
+            .Where(entityType => !entityType.IsOwned())
+            .Select(entityType => new
+            {
+                Schema = entityType.GetSchema() ?? dbContext.Model.GetDefaultSchema() ?? "public",
+                Table = entityType.GetTableName()
+            })
+            .Where(tuple => !string.IsNullOrWhiteSpace(tuple.Table))
+            .Distinct()
+            .ToList();
+
+        var missing = new List<string>();
+
+        var connection = dbContext.Database.GetDbConnection();
+        var shouldClose = connection.State != ConnectionState.Open;
+
+        if (shouldClose)
+        {
+            connection.Open();
+        }
+
+        try
+        {
+            foreach (var table in entityTables)
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = @schema AND table_name = @table)";
+
+                var schemaParameter = command.CreateParameter();
+                schemaParameter.ParameterName = "@schema";
+                schemaParameter.Value = table.Schema;
+                command.Parameters.Add(schemaParameter);
+
+                var tableParameter = command.CreateParameter();
+                tableParameter.ParameterName = "@table";
+                tableParameter.Value = table.Table!;
+                command.Parameters.Add(tableParameter);
+
+                var exists = command.ExecuteScalar() as bool? ?? false;
+                if (!exists)
+                {
+                    missing.Add($"{table.Schema}.{table.Table}");
+                }
+            }
+        }
+        finally
+        {
+            if (shouldClose)
+            {
+                connection.Close();
+            }
+        }
+
+        return missing;
     }
 
     private static void EagerInitializeSingletons(IServiceCollection services, IServiceProvider provider)
