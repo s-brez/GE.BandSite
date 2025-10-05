@@ -10,6 +10,10 @@
 		<ItemGroup>
 		<PackageReference Include="AWSSDK.SecurityToken" Version="4.0.2.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.9" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />

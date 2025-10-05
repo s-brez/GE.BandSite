@@ -21,7 +21,7 @@ This repository now ships with `scripts/deploy.ps1`, a PowerShell helper that au
 - Ubuntu 24.04 LTS ARM (t4g.small) instance reachable at `<host>` with SSH user `ubuntu` and inbound TCP/80 open from the Internet.
 - Security group allows `ssh` from admin network.
 
-The script is idempotent: it installs system packages (`postgresql`, `git`, `rsync`, `curl`), downloads the .NET 9 runtime into `/usr/share/dotnet`, configures `dotnet-ef`, ensures `/srv/GE.BandSite` + `/var/www/ge-band-site`, writes the `ge-band-site.service` unit, and prepares Postgres (`ge-band-site` database; `postgres` password `pg_2f7e…`).
+The script is idempotent: it installs system packages (`postgresql`, `git`, `rsync`, `curl`), downloads the .NET 9 runtime into `/usr/share/dotnet`, configures `dotnet-ef`, ensures `/app/GE.BandSite` + `/var/www/ge-band-site`, writes the `ge-band-site.service` unit, and prepares Postgres (`ge-band-site` database; `postgres` password `pg_2f7e…`).
 
 ## Running a deployment
 ```powershell
@@ -30,7 +30,7 @@ pwsh ./scripts/deploy.ps1 -HostName ec2-1-2-3-4.ap-southeast-2.compute.amazonaws
 
 Optional parameters:
 - `-Branch staging` – deploy a different branch.
-- `-RepositoryUrl https://github.com/<user>/GE.BandSite.git` – override Git origin (inferred automatically). SSH-style URLs are converted to HTTPS automatically; for private repos supply a PAT, e.g. `https://<token>@github.com/<user>/GE.BandSite.git`.
+- `-RepositoryUrl https://github.com/<user>/GE.BandSite.git` – override Git origin (inferred automatically). Provide an SSH or HTTPS URL; the default SSH remote uses agent forwarding, so ensure your GitHub key is loaded into `ssh-agent`.
 - `-SkipPrerequisites` – skip package/unit provisioning when already configured.
 - `-SkipBackup` – bypass the pre-deploy `pg_dump` (default keeps 14 days of gzip’d dumps under `/var/backups/ge-band-site`).
 

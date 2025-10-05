@@ -50,10 +50,6 @@ if (-not $RepositoryUrl) {
     }
 }
 
-if ($RepositoryUrl -match '^git@([^:]+):(.*)$') {
-    $RepositoryUrl = "https://$($matches[1])/$($matches[2])"
-}
-
 if (-not (Test-Path -Path $KeyPath -PathType Leaf)) {
     throw "SSH key not found at '$KeyPath'."
 }
@@ -192,7 +188,10 @@ $tempEnv = New-TemporaryFile
 Write-UnixFile -Path $tempEnv -Content $envContent
 
 $knownHosts = Join-Path $env:USERPROFILE ".ssh\known_hosts"
-$sshOptions = @("-i", $KeyPath, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=$knownHosts")
+if (-not (Test-Path $knownHosts)) {
+    $null = New-Item -ItemType File -Path $knownHosts -Force
+}
+$sshOptions = @("-i", $KeyPath, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=$knownHosts", "-o", "ForwardAgent=yes")
 $scpArgs = $sshOptions
 $sshArgs = $sshOptions + ("${SshUser}@${HostName}")
 
@@ -257,6 +256,7 @@ fi
 
 sudo mkdir -p /etc/ge-band-site
 sudo mkdir -p /var/backups/ge-band-site
+sudo chown postgres:postgres /var/backups/ge-band-site
 sudo mkdir -p /var/www/ge-band-site/wwwroot/images
 sudo mkdir -p /var/www/ge-band-site/wwwroot/videos
 sudo chown -R www-data:www-data /var/www/ge-band-site
@@ -266,6 +266,10 @@ if [ ! -d /app/GE.BandSite ]; then
   sudo mkdir -p /app/GE.BandSite
   sudo chown __SSH_USER__:__SSH_USER__ /app/GE.BandSite
 fi
+
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+ssh-keyscan -H github.com 2>/dev/null | sort -u | tee -a "$HOME/.ssh/known_hosts" >/dev/null
 
 if [ ! -d /app/GE.BandSite/.git ]; then
   git clone "__REPO_URL__" /app/GE.BandSite
@@ -336,7 +340,9 @@ dotnet restore
 
 if [ "$SKIP_BACKUP" != "true" ]; then
   ts=$(date +%Y%m%d%H%M%S)
-  sudo -u postgres pg_dump ge-band-site | gzip > /var/backups/ge-band-site/ge-band-site-${ts}.sql.gz
+  sudo -u postgres pg_dump ge-band-site | gzip > /tmp/ge-band-site-${ts}.sql.gz
+  sudo mv /tmp/ge-band-site-${ts}.sql.gz /var/backups/ge-band-site/ge-band-site-${ts}.sql.gz
+  sudo chown postgres:postgres /var/backups/ge-band-site/ge-band-site-${ts}.sql.gz
   sudo find /var/backups/ge-band-site -type f -name 'ge-band-site-*.sql.gz' -mtime +14 -delete
 fi
 
