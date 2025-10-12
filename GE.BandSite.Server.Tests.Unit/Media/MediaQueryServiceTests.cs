@@ -155,4 +155,12 @@ public class MediaQueryServiceTests
             Assert.That(result.Videos.First().Title, Is.EqualTo("Video Home"));
         });
     }
+
+    [Test]
+    public void Constructor_ThrowsWhenBaseUrlMissing()
+    {
+        var options = Options.Create(new MediaDeliveryOptions());
+
+        Assert.Throws<InvalidOperationException>(() => new MediaQueryService(_dbContext, options));
+    }
 }

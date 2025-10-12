@@ -11,12 +11,25 @@ namespace GE.BandSite.Server.Features.Media;
 public sealed class MediaQueryService : IMediaQueryService
 {
     private readonly IGeBandSiteDbContext _dbContext;
-    private readonly MediaDeliveryOptions _options;
+    private readonly string _baseUrl;
 
     public MediaQueryService(IGeBandSiteDbContext dbContext, IOptions<MediaDeliveryOptions> options)
     {
         _dbContext = dbContext;
-        _options = options.Value;
+        var configuredBaseUrl = options.Value.BaseUrl;
+        if (string.IsNullOrWhiteSpace(configuredBaseUrl))
+        {
+            throw new InvalidOperationException("MediaDelivery:BaseUrl must be configured to resolve media URLs.");
+        }
+
+        if (!Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var parsed) ||
+            (!string.Equals(parsed.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+             !string.Equals(parsed.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("MediaDelivery:BaseUrl must be an absolute HTTP(S) URL.");
+        }
+
+        _baseUrl = configuredBaseUrl.TrimEnd('/');
     }
 
     public async Task<HomeMediaModel> GetHomeHighlightsAsync(CancellationToken cancellationToken = default)
@@ -126,12 +139,7 @@ public sealed class MediaQueryService : IMediaQueryService
             return absolute.ToString();
         }
 
-        if (!string.IsNullOrWhiteSpace(_options.BaseUrl))
-        {
-            return string.Concat(_options.BaseUrl.TrimEnd('/'), "/", path.TrimStart('/'));
-        }
-
-        return "/" + path.TrimStart('/');
+        return string.Concat(_baseUrl, "/", path.TrimStart('/'));
     }
 }
 

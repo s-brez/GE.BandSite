@@ -185,6 +185,7 @@ public class Program
         builder.Services.AddSingleton<IClock>(SystemClock.Instance);
         builder.Services.AddSingleton<IValidateOptions<DatabaseBackupOptions>, DatabaseBackupOptionsValidator>();
         builder.Services.AddSingleton<IValidateOptions<MediaProcessingOptions>, MediaProcessingOptionsValidator>();
+        builder.Services.AddSingleton<IValidateOptions<MediaDeliveryOptions>, MediaDeliveryOptionsValidator>();
 
         builder.Services.Configure<ContactNotificationOptions>(configuration.GetSection("ContactNotifications"));
         builder.Services.Configure<PasswordResetOptions>(configuration.GetSection("PasswordReset"));
