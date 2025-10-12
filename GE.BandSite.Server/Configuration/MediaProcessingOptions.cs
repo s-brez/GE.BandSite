@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace GE.BandSite.Server.Configuration;
 
 public sealed class MediaProcessingOptions
@@ -14,7 +16,15 @@ public sealed class MediaProcessingOptions
 
     public string? FfmpegPath { get; set; } = "ffmpeg";
 
+    public string? FfmpegPathWindows { get; set; }
+
+    public string? FfmpegPathUnix { get; set; }
+
     public string? FfprobePath { get; set; } = "ffprobe";
+
+    public string? FfprobePathWindows { get; set; }
+
+    public string? FfprobePathUnix { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether photo optimization is enabled.
@@ -35,4 +45,31 @@ public sealed class MediaProcessingOptions
     /// Gets or sets the JPEG quality (1-100) applied to optimized photos.
     /// </summary>
     public int PhotoJpegQuality { get; set; } = 85;
+
+    public string? GetFfmpegPath()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Coalesce(FfmpegPathWindows, FfmpegPath)
+            : Coalesce(FfmpegPathUnix, FfmpegPath);
+    }
+
+    public string? GetFfprobePath()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Coalesce(FfprobePathWindows, FfprobePath)
+            : Coalesce(FfprobePathUnix, FfprobePath);
+    }
+
+    private static string? Coalesce(params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (!string.IsNullOrWhiteSpace(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
 }

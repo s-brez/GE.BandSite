@@ -130,8 +130,13 @@ if ($recipientValues.Count -gt 0) {
     }
 }
 
-$flat["MediaProcessing__FfmpegPath"] = "/usr/bin/ffmpeg"
-$flat["MediaProcessing__FfprobePath"] = "/usr/bin/ffprobe"
+if (-not $flat.ContainsKey("MediaProcessing__FfmpegPathUnix")) {
+    $flat["MediaProcessing__FfmpegPathUnix"] = "/usr/bin/ffmpeg"
+}
+
+if (-not $flat.ContainsKey("MediaProcessing__FfprobePathUnix")) {
+    $flat["MediaProcessing__FfprobePathUnix"] = "/usr/bin/ffprobe"
+}
 
 function Set-IfPresent {
     param(

@@ -28,6 +28,10 @@
   "VideoPlaybackPrefix": "videos"
 },
 "MediaProcessing": {
+  "FfmpegPathWindows": "C:/Program Files/ffmpeg/ffmpeg.exe",
+  "FfprobePathWindows": "C:/Program Files/ffmpeg/ffprobe.exe",
+  "FfmpegPathUnix": "/usr/bin/ffmpeg",
+  "FfprobePathUnix": "/usr/bin/ffprobe",
   "PhotoOptimizationEnabled": true,
   "PhotoMaxWidth": 2048,
   "PhotoMaxHeight": 2048,

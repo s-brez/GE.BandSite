@@ -14,9 +14,9 @@ public sealed class MediaProcessingOptionsValidator : IValidateOptions<MediaProc
             return ValidateOptionsResult.Success;
         }
 
-        if (string.IsNullOrWhiteSpace(options.FfmpegPath))
+        if (string.IsNullOrWhiteSpace(options.GetFfmpegPath()))
         {
-            return ValidateOptionsResult.Fail("MediaProcessing:FfmpegPath must be configured when media processing is enabled.");
+            return ValidateOptionsResult.Fail("MediaProcessing FFMPEG path must be configured for the current platform (set FfmpegPath*, or the cross-platform FfmpegPath).");
         }
 
         if (options.PhotoOptimizationEnabled)

@@ -59,7 +59,7 @@ public sealed class FfmpegMediaTranscoder : IMediaTranscoder
 
     private async Task RunFfmpegAsync(string inputPath, string outputPath, CancellationToken cancellationToken)
     {
-        var ffmpegPath = ResolveRequiredPath(_options.FfmpegPath, nameof(MediaProcessingOptions.FfmpegPath));
+        var ffmpegPath = ResolveRequiredPath(_options.GetFfmpegPath(), "MediaProcessing FfmpegPath");
         var arguments = $"-y -i \"{inputPath}\" -c:v libx264 -preset veryfast -crf 20 -movflags +faststart -c:a aac -b:a 192k \"{outputPath}\"";
 
         var startInfo = new ProcessStartInfo
@@ -186,23 +186,25 @@ public sealed class FfmpegMediaTranscoder : IMediaTranscoder
 
     private string? ResolveFfprobePath()
     {
-        if (!string.IsNullOrWhiteSpace(_options.FfprobePath))
+        var configuredPath = _options.GetFfprobePath();
+        if (!string.IsNullOrWhiteSpace(configuredPath))
         {
-            return _options.FfprobePath;
+            return configuredPath;
         }
 
-        if (string.IsNullOrWhiteSpace(_options.FfmpegPath))
+        var ffmpegPath = _options.GetFfmpegPath();
+        if (string.IsNullOrWhiteSpace(ffmpegPath))
         {
             return null;
         }
 
-        var directory = Path.GetDirectoryName(_options.FfmpegPath);
+        var directory = Path.GetDirectoryName(ffmpegPath);
         if (string.IsNullOrWhiteSpace(directory))
         {
             return "ffprobe";
         }
 
-        var extension = Path.GetExtension(_options.FfmpegPath);
+        var extension = Path.GetExtension(ffmpegPath);
         var probeFileName = string.IsNullOrWhiteSpace(extension) ? "ffprobe" : $"ffprobe{extension}";
         return Path.Combine(directory, probeFileName);
     }

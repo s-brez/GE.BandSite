@@ -135,7 +135,7 @@
     - `GE.BandSite.Server/Pages/Index.cshtml(.cs)` – update fallback/media URLs once MP4 outputs exist.
   - **Infrastructure**
     - Document backlog requeue steps: identify `.mov` assets in S3/DB, mark them `Pending`, and let the hosted service regenerate MP4 playback paths.
-    - Require `MediaProcessingOptions.FfmpegPath` and temp directories per environment; document FFmpeg installation for Windows/Linux.
+    - Require platform-specific FFmpeg paths (`MediaProcessingOptions.FfmpegPathWindows` / `MediaProcessingOptions.FfmpegPathUnix`, with `FfmpegPath` as fallback) and temp directories per environment; document FFmpeg installation for Windows/Linux.
     - Keep hosted service single-threaded; add logging/metrics for conversion start, success, failure.
     - Ensure S3 playback prefix (or CloudFront) exposes MP4s with `video/mp4` content-type and CORS/range headers.
   - **Testing**

@@ -27,7 +27,7 @@
 - Forward logs to CloudWatch Logs if centralized retention is required. Until that integration is in place, archive the log directory weekly to S3 before pruning local copies beyond the configured count.
 
 ## Media Processing (ffmpeg)
-- The video pipeline depends on `ffmpeg` available at `MediaProcessing: FfmpegPath` (default `ffmpeg`). Confirm the binary is present with `ffmpeg -version`; install from the distribution repository for the EC2 AMI if missing.
+- The video pipeline depends on `ffmpeg` available via the platform-specific settings (`MediaProcessing:FfmpegPathWindows` / `MediaProcessing:FfmpegPathUnix`, falling back to `MediaProcessing:FfmpegPath`). Confirm the binary is present with `ffmpeg -version`; install from the distribution repository for the EC2 AMI if missing.
 - When updating ffmpeg, restart the application service to ensure the hosted background worker picks up the new binary path. Run an admin video upload on staging to verify transcodes succeed end-to-end.
 - Troubleshoot failures by reviewing logs emitted by `MediaProcessingHostedService`; errors surface the command line and exception details.
 - On application startup the media bootstrapper scans the configured S3 prefixes and inserts missing `MediaAsset` rows. Legacy `.mov` sources are added with `Pending` state so the transcode worker can regenerate MP4 playback files automatically.
