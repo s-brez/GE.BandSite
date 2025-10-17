@@ -174,6 +174,7 @@ public class Program
             .AddTransient<IRefreshTokenGenerator, RefreshTokenGenerator>(_ => new RefreshTokenGenerator());
 
         builder.Services.AddSingleton<IPasswordHasher, PBKDF2SHA512PasswordHasher>();
+        builder.Services.Configure<SystemUserOptions>(configuration.GetSection("SystemUser"));
         builder.Services.AddTransient<ILoginService, LoginService>();
     }
 

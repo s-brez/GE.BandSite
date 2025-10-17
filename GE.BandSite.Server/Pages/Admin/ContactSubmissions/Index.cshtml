@@ -3,11 +3,11 @@
 @model GE.BandSite.Server.Pages.Admin.ContactSubmissions.IndexModel
 @{
     Layout = "../_Layout";
-    ViewData["Title"] = "Contact Submissions";
+    ViewData["Title"] = "Booking Requests";
 }
 
 <section class="admin-contact">
-    <h1>Contact Submissions</h1>
+    <h1>Booking Requests</h1>
     @if (!string.IsNullOrEmpty(Model.StatusMessage))
     {
         <div class="admin-contact__status">@Model.StatusMessage</div>

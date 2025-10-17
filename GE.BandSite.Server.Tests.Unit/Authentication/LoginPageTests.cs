@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GE.BandSite.Server.Configuration;
 using GE.BandSite.Server.Authentication;
 using GE.BandSite.Server.Pages;
 using GE.BandSite.Server.Services;
@@ -10,6 +15,10 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using NodaTime;
 using NUnit.Framework;
 
 namespace GE.BandSite.Server.Tests.Authentication;
@@ -108,9 +117,86 @@ public class LoginPageTests
         Assert.That(model.ModelState[string.Empty]!.Errors[0].ErrorMessage, Is.EqualTo("Invalid email or password."));
     }
 
-    private static LoginModel CreateModel(ILoginService loginService, DefaultHttpContext? httpContext = null)
+    [Test]
+    public async Task OnPostAsync_SystemUserCredentials_IssuesCookieAndSkipsService()
+    {
+        var loginService = new RecordingLoginService();
+        var httpContext = new DefaultHttpContext();
+
+        var options = new SystemUserOptions
+        {
+            Enabled = true,
+            SessionTimeout = TimeSpan.FromHours(12),
+            Users = new List<SystemUserCredential>
+            {
+                new()
+                {
+                    UserName = "Admin",
+                    Password = "SuperSecret!"
+                }
+            }
+        };
+
+        var model = CreateModel(loginService, httpContext, options);
+        model.Input.Email = "Admin";
+        model.Input.Password = "SuperSecret!";
+
+        var result = await model.OnPostAsync();
+
+        Assert.That(result, Is.TypeOf<RedirectToPageResult>());
+        Assert.That(loginService.CallCount, Is.EqualTo(0));
+
+        var setCookies = httpContext.Response.Headers.SetCookie.ToString();
+        Assert.That(setCookies, Does.Contain($"{AuthenticationConfiguration.AccessTokenKey}="));
+        Assert.That(setCookies, Does.Not.Contain($"{AuthenticationConfiguration.RefreshTokenKey}="));
+    }
+
+    [Test]
+    public async Task OnPostAsync_SystemUserInvalidPassword_ReturnsErrorWithoutCallingService()
+    {
+        var loginService = new RecordingLoginService();
+        var httpContext = new DefaultHttpContext();
+
+        var options = new SystemUserOptions
+        {
+            Enabled = true,
+            Users = new List<SystemUserCredential>
+            {
+                new()
+                {
+                    UserName = "Admin",
+                    Password = "SuperSecret!"
+                }
+            }
+        };
+
+        var model = CreateModel(loginService, httpContext, options);
+        model.Input.Email = "Admin";
+        model.Input.Password = "WrongPassword";
+
+        var result = await model.OnPostAsync();
+
+        Assert.That(result, Is.TypeOf<PageResult>());
+        Assert.That(loginService.CallCount, Is.EqualTo(0));
+        Assert.That(model.ModelState[string.Empty]?.Errors.Single().ErrorMessage, Is.EqualTo("Invalid email or password."));
+        Assert.That(model.Response.StatusCode, Is.EqualTo(StatusCodes.Status401Unauthorized));
+    }
+
+    private static LoginModel CreateModel(
+        ILoginService loginService,
+        DefaultHttpContext? httpContext = null,
+        SystemUserOptions? options = null,
+        ISecurityTokenGenerator? tokenGenerator = null,
+        IClock? clock = null)
     {
         var context = httpContext ?? new DefaultHttpContext();
+        var services = new ServiceCollection();
+
+        var optionsWrapper = Options.Create(options ?? new SystemUserOptions());
+        services.AddSingleton<IOptions<SystemUserOptions>>(optionsWrapper);
+
+        context.RequestServices = services.BuildServiceProvider();
+
         var pageContext = new PageContext
         {
             HttpContext = context,
@@ -118,7 +204,11 @@ public class LoginPageTests
             ActionDescriptor = new CompiledPageActionDescriptor()
         };
 
-        var model = new LoginModel(loginService)
+        var model = new LoginModel(
+            loginService,
+            optionsWrapper,
+            tokenGenerator ?? new RecordingSecurityTokenGenerator(),
+            clock ?? new FixedClock(SystemClock.Instance.GetCurrentInstant()))
         {
             PageContext = pageContext
         };
@@ -147,5 +237,39 @@ public class LoginPageTests
 
             return Task.FromResult(Result);
         }
+    }
+
+    private sealed class RecordingSecurityTokenGenerator : ISecurityTokenGenerator
+    {
+        public SecurityTokenDescriptor? LastDescriptor { get; private set; }
+
+        public SecurityToken Generate(SecurityTokenDescriptor securityTokenDescriptor)
+        {
+            LastDescriptor = securityTokenDescriptor;
+            return new JwtSecurityToken(
+                issuer: securityTokenDescriptor.Issuer,
+                audience: securityTokenDescriptor.Audience,
+                claims: securityTokenDescriptor.Subject?.Claims,
+                notBefore: securityTokenDescriptor.NotBefore,
+                expires: securityTokenDescriptor.Expires,
+                signingCredentials: securityTokenDescriptor.SigningCredentials);
+        }
+
+        public string GenerateJwt(GE.BandSite.Database.User user, HostString host)
+        {
+            return "token";
+        }
+    }
+
+    private sealed class FixedClock : IClock
+    {
+        private readonly Instant _now;
+
+        public FixedClock(Instant now)
+        {
+            _now = now;
+        }
+
+        public Instant GetCurrentInstant() => _now;
     }
 }
