@@ -18,7 +18,7 @@
             @foreach (var photo in Model.PhotoGallery)
             {
                 <figure
-                    class="media-card"
+                    class="media-card media-card--photo"
                     data-media-type="image"
                     data-media-src="@photo.Url"
                     data-media-title="@photo.Title"
@@ -28,7 +28,6 @@
                             <img src="@photo.Url" alt="@photo.Title" loading="lazy" />
                         </span>
                     </button>
-                    <figcaption>@photo.Title</figcaption>
                 </figure>
             }
         </div>

@@ -1183,6 +1183,16 @@ a:focus {
     background: #050505;
 }
 
+.media-card--photo .media-card__thumb {
+    aspect-ratio: auto;
+}
+
+.media-card--photo .media-card__thumb img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
 .media-card--video .media-card__thumb {
     aspect-ratio: var(--media-card-aspect, 16 / 9);
 }
