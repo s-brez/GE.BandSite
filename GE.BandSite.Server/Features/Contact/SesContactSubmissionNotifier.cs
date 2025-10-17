@@ -127,6 +127,7 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
         AppendRow(builder, "Phone", notification.OrganizerPhone);
         AppendRow(builder, "Event Type", notification.EventType);
         AppendRow(builder, "Event Date", FormatLocalDate(notification.EventDate));
+        AppendRow(builder, "Event Timezone", notification.EventTimezone);
         AppendRow(builder, "Location", notification.Location);
         AppendRow(builder, "Preferred Band Size", notification.PreferredBandSize);
         AppendRow(builder, "Budget Range", notification.BudgetRange);
@@ -151,6 +152,10 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
         if (!string.IsNullOrWhiteSpace(formattedDate))
         {
             builder.AppendLine($"Event Date: {formattedDate}");
+        }
+        if (!string.IsNullOrWhiteSpace(notification.EventTimezone))
+        {
+            builder.AppendLine($"Event Timezone: {notification.EventTimezone}");
         }
         if (!string.IsNullOrWhiteSpace(notification.Location))
         {

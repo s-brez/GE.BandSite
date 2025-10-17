@@ -26,14 +26,9 @@
             }
         </div>
         <aside class="events-list__notes">
-            <h2>Plan your showcase</h2>
-            <ul>
-                @foreach (var note in Model.BookingNotes)
-                {
-                    <li>@note</li>
-                }
-            </ul>
-            <a class="button button--primary" href="/Contact">Request a booking</a>
+            <figure class="events-note__figure">
+                <img src="~/images/20_web.jpg" alt="Swing The Boogie performing live on stage" loading="lazy" />
+            </figure>
         </aside>
     </section>
 </div>

@@ -29,6 +29,9 @@ public class ContactSubmission : Entity, IEntityTypeConfiguration<ContactSubmiss
 
     public LocalDate? EventDate { get; set; }
 
+    [StringLength(100)]
+    public string? EventTimezone { get; set; }
+
     [StringLength(200)]
     public string? Location { get; set; }
 

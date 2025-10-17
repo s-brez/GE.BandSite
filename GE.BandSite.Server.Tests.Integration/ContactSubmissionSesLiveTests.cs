@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NodaTime;
 
 namespace GE.BandSite.Server.Tests.Integration;
 
@@ -98,7 +99,7 @@ public sealed class ContactSubmissionSesLiveTests
     {
         var antiforgeryToken = await FetchAntiforgeryTokenAsync();
 
-        var todaysDate = DateTime.UtcNow.Date.AddDays(21);
+        var eventDateTime = DateTime.UtcNow.Date.AddDays(21).AddHours(18);
         var form = new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = antiforgeryToken,
@@ -106,7 +107,8 @@ public sealed class ContactSubmissionSesLiveTests
             ["Input.OrganizerEmail"] = "integration-test@swingtheboogie.com",
             ["Input.OrganizerPhone"] = "+15551231234",
             ["Input.EventType"] = "Integration Test",
-            ["Input.EventDate"] = todaysDate.ToString("yyyy-MM-dd"),
+            ["Input.EventDateTime"] = eventDateTime.ToString("yyyy-MM-ddTHH:mm"),
+            ["Input.EventTimezone"] = "Etc/UTC",
             ["Input.Location"] = "Test Lab",
             ["Input.PreferredBandSize"] = "Full Band",
             ["Input.BudgetRange"] = "Confidential",
@@ -123,7 +125,12 @@ public sealed class ContactSubmissionSesLiveTests
 
         await using var db = _postgres.CreateDbContext<GeBandSiteDbContext>();
         var stored = await db.ContactSubmissions.SingleAsync();
-        Assert.That(stored.OrganizerEmail, Is.EqualTo("integration-test@swingtheboogie.com"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stored.OrganizerEmail, Is.EqualTo("integration-test@swingtheboogie.com"));
+            Assert.That(stored.EventDate, Is.EqualTo(LocalDate.FromDateTime(eventDateTime.Date)));
+            Assert.That(stored.EventTimezone, Is.EqualTo("Etc/UTC"));
+        });
 
         var sesClient = _factory.RecordingClient ?? throw new InvalidOperationException("SES client recorder was not initialized.");
         Assert.That(sesClient.Requests, Has.Count.EqualTo(1));

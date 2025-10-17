@@ -4,7 +4,7 @@
     ViewData["Title"] = "Contact";
 }
 
-<div class="page">
+<div class="page" style="gap:24px !important;">
     <section class="page__section contact-hero" style="padding-top: 40px">
         <div class="contact-hero__copy">
             <p class="page-eyebrow"></p>
@@ -22,23 +22,21 @@
 
     <section class="page__section contact-form">
         <div class="contact-form__intro">
-            <h2 class="section-heading__title">Tell us about your event</h2>
-            <p class="section-heading__lead">Share the essentials and we&apos;ll tailor a line-up, repertoire, and production plan specifically for your celebration.</p>
             @if (Model.SubmissionSucceeded)
             {
                 <div class="contact-form__success" role="status">@Model.SubmissionMessage</div>
             }
         </div>
-        <form class="contact-form__fields" method="post" asp-antiforgery="true">
-            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <form class="contact-form__fields" method="post" asp-antiforgery="true" data-contact-form novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert" aria-live="assertive"></div>
             <div class="form-field">
                 <label asp-for="Input.OrganizerName"></label>
-                <input asp-for="Input.OrganizerName" />
+                <input asp-for="Input.OrganizerName" required />
                 <span class="validation-message" asp-validation-for="Input.OrganizerName"></span>
             </div>
             <div class="form-field">
                 <label asp-for="Input.OrganizerEmail"></label>
-                <input asp-for="Input.OrganizerEmail" />
+                <input asp-for="Input.OrganizerEmail" required />
                 <span class="validation-message" asp-validation-for="Input.OrganizerEmail"></span>
             </div>
             <div class="form-field">
@@ -48,7 +46,7 @@
             </div>
             <div class="form-field">
                 <label asp-for="Input.EventType"></label>
-                <select asp-for="Input.EventType">
+                <select asp-for="Input.EventType" required>
                     <option value="">Select an event type</option>
                     @foreach (var option in Model.FormDefinition.EventTypes)
                     {
@@ -58,9 +56,20 @@
                 <span class="validation-message" asp-validation-for="Input.EventType"></span>
             </div>
             <div class="form-field">
-                <label asp-for="Input.EventDate"></label>
-                <input asp-for="Input.EventDate" />
-                <span class="validation-message" asp-validation-for="Input.EventDate"></span>
+                <label asp-for="Input.EventDateTime"></label>
+                <input asp-for="Input.EventDateTime" type="datetime-local" />
+                <span class="validation-message" asp-validation-for="Input.EventDateTime"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Input.EventTimezone"></label>
+                <select asp-for="Input.EventTimezone">
+                    <option value="">Select timezone</option>
+                    @foreach (var option in Model.FormDefinition.TimeZones)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+                <span class="validation-message" asp-validation-for="Input.EventTimezone"></span>
             </div>
             <div class="form-field">
                 <label asp-for="Input.Location"></label>
@@ -69,7 +78,7 @@
             </div>
             <div class="form-field">
                 <label asp-for="Input.PreferredBandSize"></label>
-                <select asp-for="Input.PreferredBandSize">
+                <select asp-for="Input.PreferredBandSize" required>
                     <option value="">Select lineup</option>
                     @foreach (var option in Model.FormDefinition.BandSizes)
                     {
@@ -80,7 +89,7 @@
             </div>
             <div class="form-field">
                 <label asp-for="Input.BudgetRange"></label>
-                <select asp-for="Input.BudgetRange">
+                <select asp-for="Input.BudgetRange" required>
                     <option value="">Select range</option>
                     @foreach (var option in Model.FormDefinition.BudgetRanges)
                     {
@@ -113,3 +122,8 @@
         </div>
     </section>
 </div>
+
+@section Scripts
+{
+    <script src="~/js/contact-form.js" asp-append-version="true"></script>
+}

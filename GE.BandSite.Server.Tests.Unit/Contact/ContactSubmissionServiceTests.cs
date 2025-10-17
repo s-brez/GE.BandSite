@@ -59,6 +59,7 @@ public class ContactSubmissionServiceTests
             "+13125550191",
             "Corporate Event",
             localDate,
+            "Australia/Sydney",
             "Chicago, IL",
             "10-Piece",
             "$40k+",
@@ -76,6 +77,7 @@ public class ContactSubmissionServiceTests
             Assert.That(stored.OrganizerEmail, Is.EqualTo("jordan@example.com"));
             Assert.That(stored.EventType, Is.EqualTo("Corporate Event"));
             Assert.That(stored.EventDate, Is.EqualTo(localDate));
+            Assert.That(stored.EventTimezone, Is.EqualTo("Australia/Sydney"));
         });
     }
 
@@ -87,6 +89,7 @@ public class ContactSubmissionServiceTests
             string.Empty,
             null,
             "Wedding",
+            null,
             null,
             null,
             "Solo / Duo",
@@ -111,6 +114,7 @@ public class ContactSubmissionServiceTests
             "jordan@example.com",
             null,
             "Private Function",
+            null,
             null,
             "Austin, TX",
             "5-Piece",

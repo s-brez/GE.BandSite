@@ -23,9 +23,10 @@
             <thead>
                 <tr>
                     <th>Submitted</th>
-                    <th>Organizer</th>
+                    <th>Client</th>
                     <th>Event</th>
-                    <th>Logistics</th>
+                    <th>Schedule</th>
+                    <th>Budget</th>
                     <th>Message</th>
                     <th></th>
                 </tr>
@@ -45,11 +46,21 @@
                     </td>
                     <td>
                         <div>@submission.EventType</div>
+                        <div>@submission.PreferredBandSize</div>
+                    </td>
+                    <td>
                         @if (submission.EventDate is not null)
                         {
                             <div>@submission.EventDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</div>
                         }
-                        <div>@submission.PreferredBandSize</div>
+                        else
+                        {
+                            <div>TBA</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(submission.EventTimezone))
+                        {
+                            <div class="admin-contact__timezone">@submission.EventTimezone</div>
+                        }
                     </td>
                     <td>
                         <div>@submission.BudgetRange</div>

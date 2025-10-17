@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using GE.BandSite.Server.Features.Contact;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NodaTime;
+using NodaTime.Text;
+using NodaTime.TimeZones;
+using Newtonsoft.Json;
 
 namespace GE.BandSite.Server.Pages.Contact;
 
@@ -14,6 +20,7 @@ namespace GE.BandSite.Server.Pages.Contact;
 public class IndexModel : PageModel
 {
     private readonly IContactSubmissionService _submissionService;
+    private const string SubmissionSuccessMessage = "Thank you! Our bookings team will reply within one business day.";
 
     public IndexModel(IContactSubmissionService submissionService)
     {
@@ -49,23 +56,19 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
     {
         PopulateStaticContent();
+        ValidateEventTiming();
+
+        if (IsJsonRequest())
+        {
+            return await HandleJsonSubmissionAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         if (!ModelState.IsValid)
         {
             return Page();
         }
 
-        var request = new ContactSubmissionRequest(
-            Input.OrganizerName!,
-            Input.OrganizerEmail!,
-            Input.OrganizerPhone,
-            Input.EventType!,
-            ConvertToLocalDate(Input.EventDate),
-            Input.Location,
-            Input.PreferredBandSize!,
-            Input.BudgetRange!,
-            Input.Message);
-
+        var request = BuildSubmissionRequest();
         var result = await _submissionService.SubmitAsync(request, cancellationToken).ConfigureAwait(false);
         if (!result.Success)
         {
@@ -77,20 +80,20 @@ public class IndexModel : PageModel
             return Page();
         }
 
-        SubmissionMessage = "Thank you! Our bookings team will reply within one business day.";
+        SubmissionMessage = SubmissionSuccessMessage;
         return RedirectToPage();
     }
 
     private void PopulateStaticContent()
     {
-        HeroTitle = "Let’s shape an unforgettable event.";
-        HeroLead = "Share a few details and the Swing The Boogie team will craft a line-up, repertoire, and run sheet tailored to your celebration.";
+        HeroTitle = "Ready to Book?";
+        HeroLead = "Bring Swing The Boogie to your next event!";
 
-        Manager = new ContactManager("Vivian Brooks",
-            "Touring & Bookings Manager",
+        Manager = new ContactManager("Gilbert Ernest",
+            "Band Manager",
             "bookings@swingtheboogie.com",
-            "+1 (312) 555-0191",
-            "+13125550191");
+            "+61 402 148 140",
+            "+61 402 148 140");
 
         FormDefinition = new ContactFormDefinition(
             new List<SelectOption>
@@ -102,9 +105,9 @@ public class IndexModel : PageModel
             },
             new List<SelectOption>
             {
-                new("Solo / Duo", "Solo / Duo"),
+                new("Solo", "Solo"),
+                new("Duo", "Duo"),
                 new("5-Piece", "5-Piece"),
-                new("7-Piece", "7-Piece"),
                 new("10-Piece", "10-Piece"),
             },
             new List<SelectOption>
@@ -113,21 +116,191 @@ public class IndexModel : PageModel
                 new("10k-20k", "$10k - $20k"),
                 new("20k-40k", "$20k - $40k"),
                 new("40k+", "$40k+"),
-            });
+            },
+            BuildTimeZoneOptions());
 
         FaqEntries = new List<FaqItem>
         {
-            new("Do you travel internationally?", "Yes. Our team is passport-ready and manages carnets, backline specs, and freight logistics globally."),
-            new("Can you supply AV and staging?", "We coordinate with venue or third-party AV partners, and can provide a preferred vendor list when needed."),
-            new("How flexible is the repertoire?", "We build set lists around your vision—mixing classic swing, modern pop-swing remixes, and custom arrangements on request."),
+            new("Do you travel internationally?", "Yes, worldwide."),
+            new("Can you supply AV and staging?", "Yes, packages can include full AV setup."),
+            new("Can we choose the band size?", "Absolutely – from solo to full 10-piece."),
         };
 
         ResponseCommitment = "We aim to respond to all enquiries within 3 business days.";
     }
 
-    private static LocalDate? ConvertToLocalDate(DateOnly? date) => date.HasValue
-        ? LocalDate.FromDateTime(date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified))
-        : null;
+    private async Task<IActionResult> HandleJsonSubmissionAsync(CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            var response = ContactSubmissionResponse.FromModelState(ModelState, "Please review the highlighted fields.");
+            return JsonContent(response, StatusCodes.Status400BadRequest);
+        }
+
+        var request = BuildSubmissionRequest();
+        var result = await _submissionService.SubmitAsync(request, cancellationToken).ConfigureAwait(false);
+        if (!result.Success)
+        {
+            var response = ContactSubmissionResponse.FromSubmissionErrors("We could not submit your booking request.", result.Errors);
+            return JsonContent(response, StatusCodes.Status400BadRequest);
+        }
+
+        var successResponse = ContactSubmissionResponse.FromSuccess(SubmissionSuccessMessage);
+        return JsonContent(successResponse, StatusCodes.Status200OK);
+    }
+
+    private bool IsJsonRequest()
+    {
+        if (Request.Headers.TryGetValue("Accept", out var acceptValues))
+        {
+            if (acceptValues.Any(value => value != null &&
+                value.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return true;
+            }
+        }
+
+        if (Request.Headers.TryGetValue("X-Requested-With", out var requestedWith))
+        {
+            if (requestedWith.Any(value => value != null &&
+                (string.Equals(value, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(value, "fetch", StringComparison.OrdinalIgnoreCase))))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void ValidateEventTiming()
+    {
+        var hasDateTime = Input.EventDateTime.HasValue;
+        var timeZoneId = Input.EventTimezone?.Trim();
+        var hasTimeZone = !string.IsNullOrWhiteSpace(timeZoneId);
+
+        if (!hasDateTime && !hasTimeZone)
+        {
+            return;
+        }
+
+        if (hasDateTime && !hasTimeZone)
+        {
+            ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EventTimezone)}", "Select the timezone for your event.");
+            return;
+        }
+
+        if (!hasDateTime && hasTimeZone)
+        {
+            ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EventTimezone)}", "Add the event date and time that matches the selected timezone.");
+            return;
+        }
+
+        if (hasTimeZone && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId!) is null)
+        {
+            ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EventTimezone)}", "Select a valid timezone.");
+            return;
+        }
+
+        Input.EventTimezone = timeZoneId;
+    }
+
+    private ContactSubmissionRequest BuildSubmissionRequest()
+    {
+        return new ContactSubmissionRequest(
+            Input.OrganizerName!,
+            Input.OrganizerEmail!,
+            Input.OrganizerPhone,
+            Input.EventType!,
+            ConvertToLocalDate(Input.EventDateTime, Input.EventTimezone),
+            Input.EventTimezone,
+            Input.Location,
+            Input.PreferredBandSize!,
+            Input.BudgetRange!,
+            Input.Message);
+    }
+
+    private static ContentResult JsonContent(ContactSubmissionResponse payload, int statusCode)
+    {
+        var serialized = JsonConvert.SerializeObject(payload);
+        return new ContentResult
+        {
+            Content = serialized,
+            ContentType = "application/json",
+            StatusCode = statusCode,
+        };
+    }
+
+    private static LocalDate? ConvertToLocalDate(DateTime? eventDateTime, string? timeZoneId)
+    {
+        if (!eventDateTime.HasValue)
+        {
+            return null;
+        }
+
+        var localDateTime = LocalDateTime.FromDateTime(DateTime.SpecifyKind(eventDateTime.Value, DateTimeKind.Unspecified));
+        var normalizedTimeZoneId = string.IsNullOrWhiteSpace(timeZoneId) ? null : timeZoneId.Trim();
+
+        if (!string.IsNullOrWhiteSpace(normalizedTimeZoneId))
+        {
+            var provider = DateTimeZoneProviders.Tzdb;
+            var zone = provider.GetZoneOrNull(normalizedTimeZoneId);
+            if (zone is not null)
+            {
+                var zoned = zone.AtLeniently(localDateTime);
+                return zoned.Date;
+            }
+        }
+
+        return localDateTime.Date;
+    }
+
+    private static IReadOnlyList<SelectOption> BuildTimeZoneOptions()
+    {
+        var provider = DateTimeZoneProviders.Tzdb;
+        var offsetPattern = OffsetPattern.CreateWithInvariantCulture("+HH:mm");
+        var instant = SystemClock.Instance.GetCurrentInstant();
+        var zoneIds = new[]
+        {
+            "Etc/UTC",
+            "Europe/London",
+            "Europe/Paris",
+            "Europe/Berlin",
+            "America/New_York",
+            "America/Chicago",
+            "America/Denver",
+            "America/Los_Angeles",
+            "America/Sao_Paulo",
+            "Asia/Singapore",
+            "Asia/Dubai",
+            "Asia/Tokyo",
+            "Australia/Sydney",
+            "Australia/Melbourne",
+            "Pacific/Auckland"
+        };
+
+        var options = new List<SelectOption>();
+        foreach (var zoneId in zoneIds)
+        {
+            var zone = provider.GetZoneOrNull(zoneId);
+            if (zone is null)
+            {
+                continue;
+            }
+
+            var offset = zone.GetUtcOffset(instant);
+            var offsetLabel = offsetPattern.Format(offset);
+            var friendlyName = zoneId switch
+            {
+                "Etc/UTC" => "UTC",
+                _ => zoneId.Replace('_', ' ')
+            };
+
+            options.Add(new SelectOption(zoneId, $"{friendlyName} (UTC{offsetLabel})"));
+        }
+
+        return options;
+    }
 
     public sealed record ContactManager(string Name, string Title, string Email, string PhoneDisplay, string PhoneDial)
     {
@@ -137,9 +310,11 @@ public class IndexModel : PageModel
     public sealed record ContactFormDefinition(
         IReadOnlyList<SelectOption> EventTypes,
         IReadOnlyList<SelectOption> BandSizes,
-        IReadOnlyList<SelectOption> BudgetRanges)
+        IReadOnlyList<SelectOption> BudgetRanges,
+        IReadOnlyList<SelectOption> TimeZones)
     {
         public static ContactFormDefinition Empty { get; } = new(
+            Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>());
@@ -168,8 +343,11 @@ public class IndexModel : PageModel
         [Display(Name = "Event type")]
         public string? EventType { get; set; }
 
-        [Display(Name = "Event date")]
-        public DateOnly? EventDate { get; set; }
+        [Display(Name = "Event date & time")]
+        public DateTime? EventDateTime { get; set; }
+
+        [Display(Name = "Event timezone")]
+        public string? EventTimezone { get; set; }
 
         [Display(Name = "Location")]
         [StringLength(200)]
@@ -186,5 +364,77 @@ public class IndexModel : PageModel
         [Display(Name = "Tell us about your vision")]
         [StringLength(2000)]
         public string? Message { get; set; }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public sealed class ContactSubmissionResponse
+    {
+        private static readonly IReadOnlyDictionary<string, string[]> EmptyFieldErrors =
+            new Dictionary<string, string[]>(StringComparer.Ordinal);
+
+        private static readonly IReadOnlyList<string> EmptyGeneralErrors =
+            Array.Empty<string>();
+
+        private ContactSubmissionResponse(bool success, string? message, IReadOnlyDictionary<string, string[]> fieldErrors, IReadOnlyList<string> errors)
+        {
+            Success = success;
+            Message = message;
+            FieldErrors = fieldErrors;
+            Errors = errors;
+        }
+
+        [JsonProperty("success")]
+        public bool Success { get; }
+
+        [JsonProperty("message")]
+        public string? Message { get; }
+
+        [JsonProperty("field_errors")]
+        public IReadOnlyDictionary<string, string[]> FieldErrors { get; }
+
+        [JsonProperty("errors")]
+        public IReadOnlyList<string> Errors { get; }
+
+        public static ContactSubmissionResponse FromSuccess(string message)
+        {
+            return new ContactSubmissionResponse(true, message, EmptyFieldErrors, EmptyGeneralErrors);
+        }
+
+        public static ContactSubmissionResponse FromSubmissionErrors(string? message, IReadOnlyList<string> errors)
+        {
+            var parsedErrors = errors?
+                .Where(error => !string.IsNullOrWhiteSpace(error))
+                .Select(error => error.Trim())
+                .ToArray() ?? Array.Empty<string>();
+
+            return new ContactSubmissionResponse(false, message, EmptyFieldErrors, parsedErrors);
+        }
+
+        public static ContactSubmissionResponse FromModelState(ModelStateDictionary modelState, string? message)
+        {
+            var fieldErrors = modelState
+                .Where(entry => !string.IsNullOrEmpty(entry.Key))
+                .Select(entry => new
+                {
+                    entry.Key,
+                    Errors = (entry.Value?.Errors ?? new ModelErrorCollection())
+                        .Select(error => error.ErrorMessage)
+                        .Where(error => !string.IsNullOrWhiteSpace(error))
+                        .Select(error => error.Trim())
+                        .ToArray(),
+                })
+                .Where(entry => entry.Errors.Length > 0)
+                .ToDictionary(entry => entry.Key, entry => entry.Errors, StringComparer.Ordinal);
+
+            var generalErrors = modelState
+                .Where(entry => string.IsNullOrEmpty(entry.Key))
+                .SelectMany(entry => (entry.Value?.Errors ?? new ModelErrorCollection()))
+                .Select(error => error.ErrorMessage)
+                .Where(error => !string.IsNullOrWhiteSpace(error))
+                .Select(error => error.Trim())
+                .ToArray();
+
+            return new ContactSubmissionResponse(false, message, fieldErrors, generalErrors);
+        }
     }
 }

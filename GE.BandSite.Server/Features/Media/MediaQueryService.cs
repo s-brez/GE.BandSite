@@ -5,6 +5,7 @@ using GE.BandSite.Server.Features.Media.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
+using System.IO;
 
 namespace GE.BandSite.Server.Features.Media;
 
@@ -92,6 +93,7 @@ public sealed class MediaQueryService : IMediaQueryService
 
         var videos = assets
             .Where(x => x.AssetType == MediaAssetType.Video && x.ProcessingState == MediaProcessingState.Ready)
+            .Where(asset => !HasPromoFilename(asset))
             .OrderByDescending(x => x.IsFeatured)
             .ThenBy(x => x.DisplayOrder)
             .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
@@ -140,6 +142,18 @@ public sealed class MediaQueryService : IMediaQueryService
         }
 
         return string.Concat(_baseUrl, "/", path.TrimStart('/'));
+    }
+
+    private static bool HasPromoFilename(MediaAssetProjection asset)
+    {
+        var path = !string.IsNullOrWhiteSpace(asset.PlaybackPath) ? asset.PlaybackPath : asset.StoragePath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var fileName = Path.GetFileName(path);
+        return fileName?.Contains("promo", StringComparison.OrdinalIgnoreCase) == true;
     }
 }
 

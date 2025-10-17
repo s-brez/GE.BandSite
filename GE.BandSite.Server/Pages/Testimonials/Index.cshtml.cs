@@ -27,8 +27,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "What our clients say.";
-        HeroLead = "From luxury weddings to multinational launches, Swing The Boogie keeps audiences raving long after the final horn.";
+        HeroTitle = "What our clients say";
+        HeroLead = "";
 
         Testimonials = await _organizationContent.GetPublishedTestimonialsAsync().ConfigureAwait(false);
     }

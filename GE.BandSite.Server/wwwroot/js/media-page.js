@@ -22,28 +22,56 @@
     const assignDynamicAspectRatio = () => {
         cards.forEach((card) => {
             const thumb = card.querySelector('.media-card__thumb');
-            const image = thumb ? thumb.querySelector('img') : null;
+            const media = thumb ? thumb.querySelector('img, video') : null;
 
-            if (!thumb || !image) {
+            if (!thumb || !media) {
                 return;
             }
 
-            const applyRatio = () => {
-                const { naturalWidth, naturalHeight } = image;
-                if (!naturalWidth || !naturalHeight) {
+            const setAspectRatio = (width, height) => {
+                if (!width || !height) {
                     return;
                 }
 
-                thumb.style.setProperty('--media-card-aspect', `${naturalWidth} / ${naturalHeight}`);
+                thumb.style.setProperty('--media-card-aspect', `${width} / ${height}`);
             };
 
-            if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
-                applyRatio();
-            } else {
-                image.addEventListener('load', applyRatio, { once: true });
-                image.addEventListener('error', () => {
-                    thumb.style.removeProperty('--media-card-aspect');
-                }, { once: true });
+            if (media.tagName === 'IMG') {
+                const image = media;
+                const applyImageRatio = () => {
+                    setAspectRatio(image.naturalWidth, image.naturalHeight);
+                };
+
+                if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+                    applyImageRatio();
+                } else {
+                    image.addEventListener('load', applyImageRatio, { once: true });
+                    image.addEventListener('error', () => {
+                        thumb.style.removeProperty('--media-card-aspect');
+                    }, { once: true });
+                }
+            } else if (media.tagName === 'VIDEO') {
+                const video = media;
+                const applyVideoRatio = () => {
+                    setAspectRatio(video.videoWidth, video.videoHeight);
+                    video.pause();
+                    try {
+                        if (video.paused) {
+                            video.currentTime = 0;
+                        }
+                    } catch {
+                        // Ignore attempts to reset currentTime before data is ready.
+                    }
+                };
+
+                if (video.readyState >= 1 && video.videoWidth > 0 && video.videoHeight > 0) {
+                    applyVideoRatio();
+                } else {
+                    video.addEventListener('loadedmetadata', applyVideoRatio, { once: true });
+                    video.addEventListener('error', () => {
+                        thumb.style.removeProperty('--media-card-aspect');
+                    }, { once: true });
+                }
             }
         });
     };

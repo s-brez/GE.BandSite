@@ -29,8 +29,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "Catch Swing The Boogie on stage.";
-        HeroLead = "Public showcases surface throughout the year. RSVP early or talk to us about hosting the next stop.";
+        HeroTitle = "Catch Us Live";
+        HeroLead = "Want to see Swing The Boogie in action? Here’s where you can experience the band before you book.";
 
         UpcomingEvents = await _organizationContent.GetPublishedEventsAsync().ConfigureAwait(false);
 

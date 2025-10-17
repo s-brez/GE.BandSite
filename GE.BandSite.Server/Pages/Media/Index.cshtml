@@ -40,20 +40,32 @@
         <div class="media-gallery__grid media-gallery__grid--videos">
             @foreach (var video in Model.VideoGallery)
             {
-                var posterUrl = string.IsNullOrWhiteSpace(video.PosterUrl) ? "/images/media-video-poster.svg" : video.PosterUrl;
+                var hasPoster = !string.IsNullOrWhiteSpace(video.PosterUrl);
                 <figure
                     class="media-card media-card--video"
                     data-media-type="video"
                     data-media-src="@video.Url"
-                    data-media-poster="@posterUrl"
+                    data-media-poster="@(hasPoster ? video.PosterUrl : null)"
                     data-media-title="@video.Title"
                     data-media-description="@video.Description">
                     <button type="button" class="media-card__trigger" aria-label="Watch video: @video.Title">
                         <span class="media-card__thumb">
-                            <img src="@posterUrl" alt="@video.Title" loading="lazy" />
+                            @if (hasPoster)
+                            {
+                                <img src="@video.PosterUrl" alt="@video.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <video
+                                    class="media-card__preview"
+                                    src="@video.Url"
+                                    preload="metadata"
+                                    muted
+                                    playsinline
+                                    aria-hidden="true"></video>
+                            }
                         </span>
                     </button>
-                    <figcaption>@video.Title</figcaption>
                 </figure>
             }
         </div>

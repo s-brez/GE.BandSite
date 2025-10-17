@@ -35,14 +35,14 @@ public class IndexModel : PageModel
                 }),
             new(
                 "Weddings",
-                "From the aisle to the afterparty, Swing The Boogie provides the soundtrack to your perfect day. Ceremony ballads, cocktail jazz, dance-floor anthems – we’ve got every moment covered.",
+                "From the aisle to the afterparty, Swing The Boogie provides the soundtrack to your perfect day. Ceremony ballads, cocktail jazz, dance-floor anthems ï¿½ weï¿½ve got every moment covered.",
                 new List<string>
                 {
-                    
+
                 }),
             new(
                 "Private Functions",
-                "LCelebrate life’s milestones with music that lifts the room. Birthdays, anniversaries, festivals – our band transforms gatherings into unforgettable nights.",
+                "LCelebrate lifeï¿½s milestones with music that lifts the room. Birthdays, anniversaries, festivals ï¿½ our band transforms gatherings into unforgettable nights.",
                 new List<string>
                 {
 

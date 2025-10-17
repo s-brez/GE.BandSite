@@ -66,6 +66,8 @@ public class ContactSubmissionIntegrationTests
     {
         var token = await FetchAntiforgeryTokenAsync();
 
+        var eventDateTime = DateTime.UtcNow.Date.AddDays(45).AddHours(19);
+
         var form = new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = token,
@@ -73,10 +75,11 @@ public class ContactSubmissionIntegrationTests
             ["Input.OrganizerEmail"] = "jordan@example.com",
             ["Input.OrganizerPhone"] = "+13125550191",
             ["Input.EventType"] = "Corporate Event",
-            ["Input.EventDate"] = DateTime.UtcNow.AddDays(45).ToString("yyyy-MM-dd"),
+            ["Input.EventDateTime"] = eventDateTime.ToString("yyyy-MM-ddTHH:mm"),
+            ["Input.EventTimezone"] = "Australia/Sydney",
             ["Input.Location"] = "Chicago, IL",
             ["Input.PreferredBandSize"] = "10-Piece",
-            ["Input.BudgetRange"] = "$40k+",
+            ["Input.BudgetRange"] = "40k+",
             ["Input.Message"] = "Need horn feature for award reveal."
         };
 
@@ -91,6 +94,8 @@ public class ContactSubmissionIntegrationTests
         {
             Assert.That(stored.OrganizerEmail, Is.EqualTo("jordan@example.com"));
             Assert.That(stored.EventType, Is.EqualTo("Corporate Event"));
+            Assert.That(stored.EventDate, Is.EqualTo(LocalDate.FromDateTime(eventDateTime.Date)));
+            Assert.That(stored.EventTimezone, Is.EqualTo("Australia/Sydney"));
         });
 
         Assert.That(_factory.SesClient.Requests, Has.Count.EqualTo(1));
