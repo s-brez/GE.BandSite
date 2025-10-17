@@ -56,29 +56,14 @@
     </div>
 </section>
 
-<section class="highlight-video">
-    <div class="highlight-video__text">
-        <h2 class="section-heading__title">@Model.HighlightVideoTitle</h2>
-        <p class="section-heading__lead">@Model.HighlightVideoSummary</p>
-    </div>
+<section class="highlight-video" aria-label="@Model.HighlightVideoTitle">
     <div class="highlight-video__media">
-        @if (Model.HighlightVideo is not null)
-        {
-            <div class="highlight-video__frame">
-                <video controls preload="metadata" poster="@Model.HighlightVideo?.PosterUrl">
-                    <source src="@Model.HighlightVideo?.Url" type="@Model.HighlightVideoMimeType" />
-                    Your browser does not support the video tag.
-                </video>
-                <span class="highlight-video__badge">Featured performance</span>
-            </div>
-        }
-        else
-        {
-            <div class="highlight-video__frame">
-                <img src="~/images/highlight-poster.svg" alt="Swing The Boogie highlight reel coming soon" />
-                <span class="highlight-video__badge">Media update pending</span>
-            </div>
-        }
+        <div class="highlight-video__frame">
+            <video class="highlight-video__player" controls loop preload="metadata" poster="@(Model.HighlightVideo?.PosterUrl ?? Url.Content("~/images/highlight-video-placeholder.jpg"))">
+                <source src="@Model.HighlightVideo?.Url" type="@Model.HighlightVideoMimeType" />
+                Your browser does not support the video tag.
+            </video>
+        </div>
         @if (Model.HighlightPhotos.Count > 0)
         {
             <div class="highlight-video__gallery">
@@ -97,7 +82,7 @@
 <section class="cta-banner">
     <div class="cta-banner__inner">
         <h2 class="cta-banner__title">Ready to make the night swing?</h2>
-        <p class="cta-banner__copy">From Art Deco ballrooms to rooftop soirées, Swing The Boogie keeps the dance floor buzzing. Tell us about your event and we&apos;ll shape the perfect lineup.</p>
+        <p class="cta-banner__copy"></p>
         <a class="button button--primary" href="/Contact">@Model.CallToActionText</a>
     </div>
 </section>

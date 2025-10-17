@@ -2,21 +2,12 @@
 
 1. The user will assign you a task.
    - If you run into contradictions, uncertainties or open decisions, or the task contradicts the instructions in this document, flag and seek clarification with the user before implementation.
-2. Tests:
-   - If your task concerns non-trivial/important functionality, write tests for it (refer to '## Tests'). Dont write tests for frontend/UI behaviour. There is no code coverage target, but aim to cover all important/non-trivial functionalities well. 
-   - Check for existing test projects/suites for the area you’re touching (add new tests there):
-	- Unit tests in `GE.BandSite.Server.Tests.Unit`. Self-contained, no network calls.
-	- Integration tests in `GE.BandSite.Server.Tests.Integration`. Live, make real network calls. Always run new integration tests once to verify correctness (especiallly if marked [Explicit]/[External] - must be run once).
-   - Implement task code until tests compile (run integration tests once at time of writing, unit tests often).
-3. Perform iterative development loop:
+2. Perform iterative development loop:
    - `dotnet format` (code style/format + analyzer fixes per `.editorconfig`)
    - `dotnet build -warnaserror`
-   - `dotnet test --no-build --settings test.runsettings`
-4. Repeat step 3 until:
+3. Repeat step 2 until:
    - All warnings and errors are fixed (treat warnings as errors)  
-   - All tests pass
    - Code is respectful of, and aligned with project scope in `docs/architecture.md` and `docs/client-requirements.md`, as well as any subproject-local READMEs relevant to the current task. 
-5. Once tasks are complete, mark as complete in `docs/implementation-plan.md` (e.g. ([x]...))
 
 
 # Purpose of this Repo

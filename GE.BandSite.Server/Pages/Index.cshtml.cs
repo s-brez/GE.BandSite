@@ -16,6 +16,8 @@ public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
     private readonly IMediaQueryService _mediaQueryService;
+    private const string StaticHighlightVideoTitle = "Highlight Reel";
+    private const string StaticHighlightVideoDescription = "Preview the sound, swagger, and crowd energy from recent stages as we warm up the dedicated media gallery.";
 
     public IndexModel(ILogger<IndexModel> logger, IMediaQueryService mediaQueryService)
     {
@@ -57,27 +59,31 @@ public class IndexModel : PageModel
 
         var homeMedia = await _mediaQueryService.GetHomeHighlightsAsync().ConfigureAwait(false);
 
-        HighlightVideo = homeMedia.FeaturedVideo ?? CreateFallbackHighlightVideo();
+        HighlightVideo = CreateStaticHighlightVideo(homeMedia.FeaturedVideo?.PosterUrl);
         HighlightPhotos = homeMedia.HighlightPhotos;
 
-        HighlightVideoTitle = HighlightVideo?.Title ?? "Highlight Reel";
-        HighlightVideoSummary = HighlightVideo?.Description ?? "Preview the sound, swagger, and crowd energy from recent stages as we warm up the dedicated media gallery.";
-        HighlightVideoMimeType = DetermineMimeType(HighlightVideo?.Url);
+        HighlightVideoTitle = HighlightVideo.Title;
+        HighlightVideoSummary = HighlightVideo.Description ?? StaticHighlightVideoDescription;
+        HighlightVideoMimeType = DetermineMimeType(HighlightVideo.Url);
 
         _logger.LogDebug("Home page content prepared with {ValueCount} value highlights.", ValueHighlights.Count);
     }
 
     public sealed record ValueHighlight(string Title, string Description);
 
-    private static MediaItem CreateFallbackHighlightVideo()
+    private static MediaItem CreateStaticHighlightVideo(string? posterUrl)
     {
-        const string fallbackUrl = "https://swingtheboogie-media.s3.ap-southeast-2.amazonaws.com/videos/STB_PromoMain_Horizontal.mp4";
+        const string staticHighlightUrl = "https://media.swingtheboogie.com/videos/STB-PromoSecondary-Horizontal_mp4.mp4";
+        var resolvedPosterUrl = string.IsNullOrWhiteSpace(posterUrl)
+            ? "/images/highlight-video-placeholder.jpg"
+            : posterUrl;
+
         return new MediaItem(
             Guid.Empty,
-            "Highlights",
-            "See the energy in action.",
-            fallbackUrl,
-            "/images/media-video-poster.svg",
+            StaticHighlightVideoTitle,
+            StaticHighlightVideoDescription,
+            staticHighlightUrl,
+            resolvedPosterUrl,
             Array.Empty<string>(),
             "Video");
     }

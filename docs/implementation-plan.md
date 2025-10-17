@@ -152,3 +152,4 @@
   - Enlarge header brand and hero titles for improved hierarchy.
   - Stack footer logo text with centered lines and refreshed color treatment.
   - Lift hero overlay higher in the frame for stronger above-the-fold impact.
+  - [x] Update highlight video layout and playback to use the static looping showcase reel.

@@ -607,19 +607,6 @@ a:focus {
     border: 1px solid var(--color-border);
 }
 
-.highlight-video__text {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.highlight-video__note {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-    margin: 0;
-    max-width: var(--measure-text-narrow);
-}
-
 .highlight-video__frame {
     position: relative;
     border-radius: 24px;
@@ -632,20 +619,6 @@ a:focus {
 .highlight-video__frame video {
     display: block;
     width: 100%;
-}
-
-.highlight-video__badge {
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    background: rgba(5, 5, 5, 0.85);
-    color: var(--color-text-primary);
-    padding: 8px 24px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    border: 1px solid rgba(245, 245, 245, 0.2);
 }
 
 .highlight-video__media {
@@ -2034,10 +2007,6 @@ body.media-lightbox-open {
 
     .hero__lead {
         font-size: 1.1rem;
-    }
-
-    .highlight-video {
-        grid-template-columns: 0.9fr 1.1fr;
     }
 
     .value-snapshots__grid {

@@ -210,3 +210,38 @@
     updatePlayUI();
     playVideo({ allowMutedFallback: true });
 })();
+
+(function () {
+    const highlightVideo = document.querySelector('.highlight-video__player');
+    if (!highlightVideo) {
+        return;
+    }
+
+    const pauseHighlightVideo = () => {
+        if (!highlightVideo.paused) {
+            highlightVideo.pause();
+        }
+    };
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.target !== highlightVideo) {
+                    return;
+                }
+
+                if (!entry.isIntersecting) {
+                    pauseHighlightVideo();
+                }
+            });
+        }, { threshold: 0.25 });
+
+        observer.observe(highlightVideo);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            pauseHighlightVideo();
+        }
+    });
+})();
