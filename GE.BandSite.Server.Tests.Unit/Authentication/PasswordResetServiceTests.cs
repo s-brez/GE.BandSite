@@ -4,6 +4,7 @@ using GE.BandSite.Database;
 using GE.BandSite.Database.Authentication;
 using GE.BandSite.Server.Authentication;
 using GE.BandSite.Server.Features.Contact;
+using GE.BandSite.Server.Features.Operations.Deliverability;
 using GE.BandSite.Server.Services;
 using GE.BandSite.Testing.Core;
 using Microsoft.AspNetCore.WebUtilities;
@@ -25,6 +26,7 @@ public class PasswordResetServiceTests
     private FakeSesEmailClient _sesClient = null!;
     private PBKDF2SHA512PasswordHasher _passwordHasher = null!;
     private PasswordValidator _passwordValidator = null!;
+    private EmailSuppressionService _suppressionService = null!;
     private PasswordResetService _service = null!;
     private User _user = null!;
     private PasswordResetOptions _options = null!;
@@ -43,6 +45,7 @@ public class PasswordResetServiceTests
         _sesClient = new FakeSesEmailClient();
         _passwordHasher = new PBKDF2SHA512PasswordHasher();
         _passwordValidator = new PasswordValidator();
+        _suppressionService = new EmailSuppressionService(_dbContext, NullLogger<EmailSuppressionService>.Instance);
 
         _options = new PasswordResetOptions
         {
@@ -58,6 +61,7 @@ public class PasswordResetServiceTests
             _sesClient,
             _passwordHasher,
             _passwordValidator,
+            _suppressionService,
             _clock,
             Options.Create(_options),
             NullLogger<PasswordResetService>.Instance);
@@ -122,6 +126,31 @@ public class PasswordResetServiceTests
     public async Task RequestPasswordResetAsync_WithUnknownEmail_DoesNotSendEmail()
     {
         var result = await _service.RequestPasswordResetAsync("nobody@example.com");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(result.EmailDispatched, Is.False);
+            Assert.That(_sesClient.Requests, Is.Empty);
+        });
+
+        Assert.That(await _dbContext.PasswordResetRequests.CountAsync(), Is.EqualTo(0));
+    }
+
+    [Test]
+    public async Task RequestPasswordResetAsync_WhenEmailSuppressed_DoesNotSendEmail()
+    {
+        await _suppressionService.ApplySuppressionAsync(
+            new EmailSuppressionRequest(
+                _user.Email,
+                EmailSuppressionReason.PermanentBounce,
+                "Manual block",
+                null,
+                _clock.GetCurrentInstant()),
+            CancellationToken.None);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _service.RequestPasswordResetAsync(_user.Email);
 
         Assert.Multiple(() =>
         {

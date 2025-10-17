@@ -27,6 +27,9 @@ public interface IGeBandSiteDbContext
     DbSet<MediaAsset> MediaAssets { get; set; }
     DbSet<MediaTag> MediaTags { get; set; }
     DbSet<MediaAssetTag> MediaAssetTags { get; set; }
+    DbSet<SesFeedbackEvent> SesFeedbackEvents { get; set; }
+    DbSet<SesFeedbackRecipient> SesFeedbackRecipients { get; set; }
+    DbSet<EmailSuppression> EmailSuppressions { get; set; }
 }
 
 public class GeBandSiteDbContext : DbContext, IGeBandSiteDbContext
@@ -55,6 +58,12 @@ public class GeBandSiteDbContext : DbContext, IGeBandSiteDbContext
     public DbSet<MediaTag> MediaTags { get; set; } = null!;
 
     public DbSet<MediaAssetTag> MediaAssetTags { get; set; } = null!;
+
+    public DbSet<SesFeedbackEvent> SesFeedbackEvents { get; set; } = null!;
+
+    public DbSet<SesFeedbackRecipient> SesFeedbackRecipients { get; set; } = null!;
+
+    public DbSet<EmailSuppression> EmailSuppressions { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

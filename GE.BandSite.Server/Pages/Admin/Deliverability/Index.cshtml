@@ -1,0 +1,124 @@
+@page
+@using NodaTime.Extensions
+@model GE.BandSite.Server.Pages.Admin.Deliverability.IndexModel
+@{
+    Layout = "../_Layout";
+    ViewData["Title"] = "Deliverability";
+}
+
+<section class="admin-deliverability">
+    <h1>Deliverability</h1>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="admin-deliverability__status">@Model.StatusMessage</div>
+    }
+
+    <h2>Active Suppressions</h2>
+    @if (Model.Dashboard.Suppressions.Count == 0)
+    {
+        <p>No active suppressions. SES will deliver to all configured recipients.</p>
+    }
+    else
+    {
+        <table class="admin-deliverability__table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Reason</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>Count</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var suppression in Model.Dashboard.Suppressions)
+            {
+                <tr>
+                    <td>@suppression.Email</td>
+                    <td>
+                        <div>@suppression.Reason</div>
+                        @if (!string.IsNullOrWhiteSpace(suppression.ReasonDetail))
+                        {
+                            <div class="admin-deliverability__detail">@suppression.ReasonDetail</div>
+                        }
+                    </td>
+                    <td>@suppression.FirstSuppressedAt.ToDateTimeUtc().ToLocalTime().ToString("g")</td>
+                    <td>@suppression.LastSuppressedAt.ToDateTimeUtc().ToLocalTime().ToString("g")</td>
+                    <td>@suppression.SuppressionCount</td>
+                    <td>
+                        <form method="post" asp-page-handler="Release" class="admin-deliverability__release-form">
+                            <input type="hidden" name="suppressionId" value="@suppression.Id" />
+                            <input type="text" name="reason" placeholder="Release note (optional)" maxlength="256" />
+                            <button type="submit">Release</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+
+    <h2>Recent SES Events</h2>
+    @if (Model.Dashboard.Events.Count == 0)
+    {
+        <p>No recent events recorded.</p>
+    }
+    else
+    {
+        <table class="admin-deliverability__table">
+            <thead>
+                <tr>
+                    <th>Received</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>Recipients</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var evt in Model.Dashboard.Events)
+            {
+                <tr>
+                    <td>@evt.ReceivedAt.ToDateTimeUtc().ToLocalTime().ToString("g")</td>
+                    <td>@evt.NotificationType</td>
+                    <td>
+                        <div>Message ID: @evt.SesMessageId</div>
+                        @if (!string.IsNullOrWhiteSpace(evt.SesFeedbackId))
+                        {
+                            <div>Feedback ID: @evt.SesFeedbackId</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(evt.SourceEmail))
+                        {
+                            <div>Source: @evt.SourceEmail</div>
+                        }
+                    </td>
+                    <td>
+                        <ul class="admin-deliverability__recipient-list">
+                        @foreach (var recipient in evt.Recipients)
+                        {
+                            <li>
+                                <span class="admin-deliverability__recipient-email">@recipient.Email</span>
+                                @if (!string.IsNullOrWhiteSpace(recipient.BounceType))
+                                {
+                                    <span> &ndash; @recipient.BounceType @recipient.BounceSubType (@recipient.BounceStatus)</span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(recipient.ComplaintFeedbackType))
+                                {
+                                    <span> &ndash; @recipient.ComplaintFeedbackType complaint</span>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(recipient.DiagnosticCode))
+                                {
+                                    <div class="admin-deliverability__detail">@recipient.DiagnosticCode</div>
+                                }
+                            </li>
+                        }
+                        </ul>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

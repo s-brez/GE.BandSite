@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Amazon.SimpleEmailV2.Model;
 using GE.BandSite.Database;
 using GE.BandSite.Server.Features.Contact;
+using GE.BandSite.Server.Features.Operations.Deliverability;
 using GE.BandSite.Testing.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -108,6 +109,41 @@ public class ContactSubmissionIntegrationTests
             Assert.That(request.Content?.Simple?.Subject?.Data, Is.EqualTo("New Swing The Boogie contact submission"));
             Assert.That(request.Content?.Simple?.Body?.Html?.Data, Does.Contain("Jordan Hart"));
         });
+    }
+
+    [Test]
+    public async Task PostContactForm_WhenRecipientSuppressed_SkipsNotification()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var suppressionService = scope.ServiceProvider.GetRequiredService<IEmailSuppressionService>();
+            var db = scope.ServiceProvider.GetRequiredService<GeBandSiteDbContext>();
+
+            await suppressionService.ApplySuppressionAsync(
+                new EmailSuppressionRequest(
+                    "sam@sdbgrop.io",
+                    EmailSuppressionReason.Manual,
+                    "Test coverage",
+                    null,
+                    SystemClock.Instance.GetCurrentInstant()),
+                CancellationToken.None);
+
+            await db.SaveChangesAsync();
+        }
+
+        var token = await FetchAntiforgeryTokenAsync();
+        var response = await _client.PostAsync("/Contact", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["Input.OrganizerName"] = "Jordan Hart",
+            ["Input.OrganizerEmail"] = "jordan@example.com",
+            ["Input.EventType"] = "Corporate Event",
+            ["Input.PreferredBandSize"] = "10-Piece",
+            ["Input.BudgetRange"] = "40k+"
+        }));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Redirect));
+        Assert.That(_factory.SesClient.Requests, Is.Empty);
     }
 
     [Test]

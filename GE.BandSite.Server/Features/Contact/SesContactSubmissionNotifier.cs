@@ -1,7 +1,9 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Amazon.SimpleEmailV2;
 using Amazon.SimpleEmailV2.Model;
+using GE.BandSite.Server.Features.Operations.Deliverability;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -14,17 +16,20 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
     private readonly ISesEmailClient _sesClient;
     private readonly IOptions<ContactNotificationOptions> _options;
     private readonly IContactNotificationRecipientProvider _recipientProvider;
+    private readonly IEmailSuppressionService _suppressionService;
     private readonly ILogger<SesContactSubmissionNotifier> _logger;
 
     public SesContactSubmissionNotifier(
         ISesEmailClient sesClient,
         IOptions<ContactNotificationOptions> options,
         IContactNotificationRecipientProvider recipientProvider,
+        IEmailSuppressionService suppressionService,
         ILogger<SesContactSubmissionNotifier> logger)
     {
         _sesClient = sesClient;
         _options = options;
         _recipientProvider = recipientProvider;
+        _suppressionService = suppressionService;
         _logger = logger;
     }
 
@@ -47,6 +52,13 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
         if (recipients.Count == 0)
         {
             _logger.LogWarning("Contact submission notification skipped: no recipients configured.");
+            return;
+        }
+
+        recipients = await RemoveSuppressedRecipientsAsync(recipients, cancellationToken).ConfigureAwait(false);
+        if (recipients.Count == 0)
+        {
+            _logger.LogWarning("Contact submission notification skipped: all recipients are suppressed.");
             return;
         }
 
@@ -114,6 +126,31 @@ public sealed class SesContactSubmissionNotifier : IContactSubmissionNotifier
             .ToArray();
 
         return fallback.Length == 0 ? Array.Empty<string>() : fallback;
+    }
+
+    private async Task<IReadOnlyList<string>> RemoveSuppressedRecipientsAsync(IReadOnlyList<string> recipients, CancellationToken cancellationToken)
+    {
+        if (recipients.Count == 0)
+        {
+            return recipients;
+        }
+
+        var suppressions = await _suppressionService.GetSuppressionsAsync(recipients, cancellationToken).ConfigureAwait(false);
+        if (suppressions.Count == 0)
+        {
+            return recipients;
+        }
+
+        var filtered = recipients
+            .Where(recipient => !suppressions.ContainsKey(recipient))
+            .ToArray();
+
+        foreach (var suppressed in suppressions.Keys)
+        {
+            _logger.LogWarning("Contact notification suppressed for recipient {Recipient} due to active deliverability block.", suppressed);
+        }
+
+        return filtered;
     }
 
     private static string BuildHtmlBody(ContactSubmissionNotification notification)

@@ -16,6 +16,7 @@ using GE.BandSite.Server.Features.Media.Admin;
 using GE.BandSite.Server.Features.Media.Processing;
 using GE.BandSite.Server.Features.Media.Storage;
 using GE.BandSite.Server.Features.Operations.Backups;
+using GE.BandSite.Server.Features.Operations.Deliverability;
 using GE.BandSite.Server.Features.Organization;
 using GE.BandSite.Server.Services;
 using GE.BandSite.Server.Services.Processes;
@@ -187,12 +188,14 @@ public class Program
         builder.Services.AddSingleton<IValidateOptions<DatabaseBackupOptions>, DatabaseBackupOptionsValidator>();
         builder.Services.AddSingleton<IValidateOptions<MediaProcessingOptions>, MediaProcessingOptionsValidator>();
         builder.Services.AddSingleton<IValidateOptions<MediaDeliveryOptions>, MediaDeliveryOptionsValidator>();
+        builder.Services.AddHttpClient();
 
         builder.Services.Configure<ContactNotificationOptions>(configuration.GetSection("ContactNotifications"));
         builder.Services.Configure<PasswordResetOptions>(configuration.GetSection("PasswordReset"));
         builder.Services.Configure<MediaDeliveryOptions>(configuration.GetSection("MediaDelivery"));
         builder.Services.Configure<MediaStorageOptions>(configuration.GetSection("MediaStorage"));
         builder.Services.Configure<DatabaseBackupOptions>(configuration.GetSection("DatabaseBackup"));
+        builder.Services.Configure<SesWebhookOptions>(configuration.GetSection("SesNotifications"));
 
         builder.Services.PostConfigure<ContactNotificationOptions>(options =>
         {
@@ -227,6 +230,61 @@ public class Program
                 if (recipients.Count > 0)
                 {
                     options.ToAddresses = recipients;
+                }
+            }
+        });
+
+        builder.Services.PostConfigure<SesWebhookOptions>(options =>
+        {
+            var enabledValue = configuration["SES_NOTIFICATIONS_ENABLED"];
+            if (!string.IsNullOrWhiteSpace(enabledValue) && bool.TryParse(enabledValue, out var enabled))
+            {
+                options.Enabled = enabled;
+            }
+
+            var autoConfirm = configuration["SES_NOTIFICATIONS_AUTO_CONFIRM"];
+            if (!string.IsNullOrWhiteSpace(autoConfirm) && bool.TryParse(autoConfirm, out var autoConfirmValue))
+            {
+                options.AutoConfirmSubscriptions = autoConfirmValue;
+            }
+
+            var requireTopicValidation = configuration["SES_NOTIFICATIONS_REQUIRE_TOPIC_VALIDATION"];
+            if (!string.IsNullOrWhiteSpace(requireTopicValidation) && bool.TryParse(requireTopicValidation, out var requireTopicValidationValue))
+            {
+                options.RequireTopicValidation = requireTopicValidationValue;
+            }
+
+            var bounceTopic = configuration["SES_NOTIFICATIONS_BOUNCE_TOPIC_ARN"];
+            if (!string.IsNullOrWhiteSpace(bounceTopic))
+            {
+                options.BounceTopicArn = bounceTopic.Trim();
+            }
+
+            var complaintTopic = configuration["SES_NOTIFICATIONS_COMPLAINT_TOPIC_ARN"];
+            if (!string.IsNullOrWhiteSpace(complaintTopic))
+            {
+                options.ComplaintTopicArn = complaintTopic.Trim();
+            }
+
+            var deliveryTopic = configuration["SES_NOTIFICATIONS_DELIVERY_TOPIC_ARN"];
+            if (!string.IsNullOrWhiteSpace(deliveryTopic))
+            {
+                options.DeliveryTopicArn = deliveryTopic.Trim();
+            }
+
+            var allowedTopics = configuration["SES_NOTIFICATIONS_ALLOWED_TOPIC_ARNS"];
+            if (!string.IsNullOrWhiteSpace(allowedTopics))
+            {
+                var parsed = allowedTopics
+                    .Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(static value => value.Trim())
+                    .Where(static value => value.Length > 0)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (parsed.Count > 0)
+                {
+                    options.AllowedTopicArns = parsed;
                 }
             }
         });
@@ -280,6 +338,10 @@ public class Program
         builder.Services.AddSingleton<IMediaTranscoder, FfmpegMediaTranscoder>();
         builder.Services.AddScoped<IMediaProcessingCoordinator, MediaProcessingCoordinator>();
         builder.Services.AddScoped<MediaStorageBootstrapper>();
+        builder.Services.AddSingleton<ISnsMessageValidator, SnsMessageValidator>();
+        builder.Services.AddScoped<IEmailSuppressionService, EmailSuppressionService>();
+        builder.Services.AddScoped<ISesNotificationProcessor, SesNotificationProcessor>();
+        builder.Services.AddScoped<IDeliverabilityReportService, DeliverabilityReportService>();
     }
 
     private static void RegisterHostedServices(WebApplicationBuilder builder)

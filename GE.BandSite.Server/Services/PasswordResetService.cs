@@ -4,6 +4,7 @@ using GE.BandSite.Database;
 using GE.BandSite.Database.Authentication;
 using GE.BandSite.Server.Authentication;
 using GE.BandSite.Server.Features.Contact; // for ISesEmailClient
+using GE.BandSite.Server.Features.Operations.Deliverability;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,7 @@ public sealed class PasswordResetService : IPasswordResetService
     private readonly ISesEmailClient _sesEmailClient;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordValidator _passwordValidator;
+    private readonly IEmailSuppressionService _suppressionService;
     private readonly IClock _clock;
     private readonly IOptions<PasswordResetOptions> _options;
     private readonly ILogger<PasswordResetService> _logger;
@@ -27,6 +29,7 @@ public sealed class PasswordResetService : IPasswordResetService
         ISesEmailClient sesEmailClient,
         IPasswordHasher passwordHasher,
         IPasswordValidator passwordValidator,
+        IEmailSuppressionService suppressionService,
         IClock clock,
         IOptions<PasswordResetOptions> options,
         ILogger<PasswordResetService> logger)
@@ -35,6 +38,7 @@ public sealed class PasswordResetService : IPasswordResetService
         _sesEmailClient = sesEmailClient;
         _passwordHasher = passwordHasher;
         _passwordValidator = passwordValidator;
+        _suppressionService = suppressionService;
         _clock = clock;
         _options = options;
         _logger = logger;
@@ -58,6 +62,12 @@ public sealed class PasswordResetService : IPasswordResetService
         var (user, _) = await _dbContext.GetUserByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
         if (user == null || !user.IsActive)
         {
+            return new PasswordResetRequestResult { Accepted = true, EmailDispatched = false };
+        }
+
+        if (await _suppressionService.IsSuppressedAsync(user.Email, cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogWarning("Password reset email for {Email} suppressed because address is blocked.", user.Email);
             return new PasswordResetRequestResult { Accepted = true, EmailDispatched = false };
         }
 

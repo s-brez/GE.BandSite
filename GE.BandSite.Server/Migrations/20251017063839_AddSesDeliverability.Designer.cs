@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GE.BandSite.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GE.BandSite.Server.Migrations
 {
     [DbContext(typeof(GeBandSiteDbContext))]
-    partial class GeBandSiteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017063839_AddSesDeliverability")]
+    partial class AddSesDeliverability
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

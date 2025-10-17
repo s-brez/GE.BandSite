@@ -73,6 +73,7 @@ Single EC2 origin running Kestrel + ASP.NET 9.0
 ## Observability and Operations
 - Emit structured Serilog logs to rolling on-host files. Retention follows the `LoggingConfiguration.RetainedFileCount` setting; no centralized log aggregation in MVP.
 - Do not collect metrics or health dashboards. Operational checks rely on logs, Route 53 health monitoring, and CloudFront/EC2 status pages.
+- Amazon SES bounce and complaint feedback flows into the webhook at `/api/ses/notifications`; configuration and runbook steps live in `docs/ses-notifications.md`.
 - Centralize configuration (connection strings, S3 bucket names, SES settings) in environment variables populated from AWS secrets services; never bake secrets into configuration files.
 - Deployments should restart the application service to pick up refreshed configuration and secrets.
 

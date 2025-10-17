@@ -1768,6 +1768,105 @@ body.media-lightbox-open {
     outline: none;
 }
 
+.admin-deliverability {
+    max-width: var(--max-width-content);
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.admin-deliverability__status {
+    padding: 12px 16px;
+    border: 1px solid var(--color-accent-border-soft);
+    background: var(--color-accent-tint-16);
+    border-radius: 10px;
+    max-width: 520px;
+}
+
+.admin-deliverability h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-deliverability__table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(17, 17, 23, 0.92);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.admin-deliverability__table th,
+.admin-deliverability__table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.admin-deliverability__table th {
+    background: rgba(5, 5, 5, 0.9);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+}
+
+.admin-deliverability__detail {
+    margin-top: 4px;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.admin-deliverability__release-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-deliverability__release-form input[type="text"] {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: var(--color-text-primary);
+}
+
+.admin-deliverability__release-form button {
+    align-self: flex-start;
+    padding: 6px 12px;
+    background: var(--color-accent);
+    color: var(--color-text-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.admin-deliverability__release-form button:hover,
+.admin-deliverability__release-form button:focus {
+    opacity: 0.85;
+}
+
+.admin-deliverability__recipient-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-deliverability__recipient-email {
+    font-weight: 600;
+}
+
 .admin-shell {
     display: grid;
     grid-template-columns: 260px 1fr;
