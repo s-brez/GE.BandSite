@@ -7,21 +7,9 @@
 <div class="page">
     <section class="page__section band-hero">
         <div class="band-hero__copy">
-            <p class="page-eyebrow">Lineup</p>
+            <p class="page-eyebrow"></p>
             <h1 class="page-title">@Model.HeroTitle</h1>
             <p class="page-lead">@Model.HeroLead</p>
-        </div>
-        <div class="band-hero__configurations">
-            <h2 class="band-hero__heading">Choose your band size</h2>
-            <ul class="band-configurations">
-                @foreach (var configuration in Model.Configurations)
-                {
-                    <li class="band-configurations__item">
-                        <span class="band-configurations__name">@configuration.Name</span>
-                        <p class="band-configurations__description">@configuration.Description</p>
-                    </li>
-                }
-            </ul>
         </div>
     </section>
 

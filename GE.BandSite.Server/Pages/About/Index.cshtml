@@ -4,7 +4,8 @@
     ViewData["Title"] = "About";
 }
 
-<div class="page">
+<div class="page" style="padding-top: 48px;">
+
     <section class="page__section about-hero">
         <div class="about-hero__copy">
             <p class="page-eyebrow">Our Story</p>
@@ -15,13 +16,21 @@
             {
                 <article class="fact-card">
                     <span class="fact-card__heading">@fact.Heading</span>
-                    <span class="fact-card__detail">@fact.Detail</span>
+                    @if (!string.IsNullOrWhiteSpace(fact.Detail))
+                    {
+                        <span class="fact-card__detail">@fact.Detail</span>
+                    }
                 </article>
             }
         </div>
     </section>
 
+    <figure class="about-story__feature-image">
+        <img src="https://d2r0vyil5uhr44.cloudfront.net/images/12_web.jpg" alt="Swing The Boogie performing." />
+    </figure>
+
     <section class="page__section about-story">
+        <h2 class="about-story__subheading">Why Choose Us</h2>
         <div class="about-story__grid">
             <div class="about-story__narrative">
                 @foreach (var paragraph in Model.StoryParagraphs)
@@ -40,17 +49,4 @@
         </div>
     </section>
 
-    <section class="page__section about-highlights">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Why Us</h2>
-        </div>
-        <div class="about-highlights__list">
-            @foreach (var point in Model.WhyChooseUsPoints)
-            {
-                <article class="highlight-card">
-                    <p>@point</p>
-                </article>
-            }
-        </div>
-    </section>
 </div>

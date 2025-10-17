@@ -85,39 +85,9 @@ public static class OrganizationSeedData
                 {
                     Id = Guid.NewGuid(),
                     Name = "Gilbert Ernest",
-                    Role = "Bandleader & Piano",
-                    Spotlight = "Signature stride piano and charismatic emceeing keep the room energized.",
-                    DisplayOrder = 0,
-                    IsActive = true,
-                    CreatedAt = timestamp
-                },
-                new BandMemberProfile
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Sienna Flores",
                     Role = "Lead Vocals",
-                    Spotlight = "Velvet crooner by day, high-octane belter by night with bilingual standards.",
-                    DisplayOrder = 1,
-                    IsActive = true,
-                    CreatedAt = timestamp
-                },
-                new BandMemberProfile
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Marcus Reed",
-                    Role = "Trumpet",
-                    Spotlight = "Brings brassy flair with bebop runs and soaring solo work.",
-                    DisplayOrder = 2,
-                    IsActive = true,
-                    CreatedAt = timestamp
-                },
-                new BandMemberProfile
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Alana Cho",
-                    Role = "Saxophone & Woodwinds",
-                    Spotlight = "Doubles on clarinet for vintage textures and modern solo fireworks.",
-                    DisplayOrder = 3,
+                    Spotlight = "Signature stride and charismatic emceeing keep the room energized.",
+                    DisplayOrder = 0,
                     IsActive = true,
                     CreatedAt = timestamp
                 }

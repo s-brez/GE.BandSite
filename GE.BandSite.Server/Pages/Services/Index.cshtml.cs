@@ -22,7 +22,7 @@ public class IndexModel : PageModel
     public void OnGet()
     {
         HeroTitle = "Turnkey swing experiences to make your event special";
-        HeroLead = "From Fortune 500 galas to sunset ceremonies, Swing The Boogie brings concierge-level planning with electrifying performance. Every package includes pre-production consultations, curated set lists, and white-glove coordination with your planner and AV lead.";
+        HeroLead = "";
 
         ServicePackages = new List<ServicePackage>
         {
@@ -31,35 +31,29 @@ public class IndexModel : PageModel
                 "Launch parties, awards nights, and incentive trips that demand high-gloss entertainment.",
                 new List<string>
                 {
-                    "Custom walk-on stings and branded medleys.",
-                    "MC services and run-sheet partnership with production teams.",
-                    "Curated sets to match networking flows, dinners, and dance blocks.",
+
                 }),
             new(
                 "Weddings",
-                "Ceremony to last dance with everything from string serenades to roaring horn finales.",
+                "From the aisle to the afterparty, Swing The Boogie provides the soundtrack to your perfect day. Ceremony ballads, cocktail jazz, dance-floor anthems – we’ve got every moment covered.",
                 new List<string>
                 {
-                    "Processional arrangements, first dance customization, and family dedications.",
-                    "Seamless transitions between cocktail, dinner, and dance segments.",
-                    "Timeline coordination with planners, celebrants, and AV partners.",
+                    
                 }),
             new(
                 "Private Functions",
-                "Luxury birthdays, anniversaries, and society gatherings seeking decadent swing.",
+                "LCelebrate life’s milestones with music that lifts the room. Birthdays, anniversaries, festivals – our band transforms gatherings into unforgettable nights.",
                 new List<string>
                 {
-                    "Ambient dinner sets with jazz standards and modern twists.",
-                    "Audience participation moments and encore medleys tailored to guests.",
-                    "Travel-ready crew for villas, yachts, and destination venues.",
+
                 }),
         };
 
         LineupPackages = new List<LineupPackage>
         {
-            new("Solo / Duo", "Perfect for ceremonies, cocktail lounges, and refined dinners where intimacy matters."),
-            new("5-Piece Ensemble", "Upright bass, drums, guitar, keys, and vocals delivering vintage swing with a modern pulse."),
-            new("10-Piece Showcase", "Horn section, dual vocals, and rhythm extras for spectacular stages and festival energy."),
+            new("Solo / Duo", "Perfect for ceremonies and small functions."),
+            new("5-Piece", "Cocktail and dinner events."),
+            new("10-Piece", "Full big band experience."),
         };
 
         AddOns = new List<string>

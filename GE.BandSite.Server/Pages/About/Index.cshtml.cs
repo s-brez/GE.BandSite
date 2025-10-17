@@ -28,28 +28,25 @@ public class IndexModel : PageModel
 
         StoryParagraphs = new List<string>
         {
-            "Every event deserves an atmosphere. With a unique lineup of ten highly skilled musicians, we adapt to suit the occasion – from a soulful singer at your ceremony to a roaring big band for your gala dinner.",
-            "We combine global polish with local passion, ensuring your guests are talking about the music long after the night ends."
+            "Every event deserves an atmosphere. With a unique lineup of ten highly skilled musicians, we adapt to suit the occasion – from a soulful singer at your ceremony to a roaring big band for your gala dinner. We combine global polish with local passion, ensuring your guests are talking about the music long after the night ends."
         };
 
         WhyChooseUsPoints = new List<string>
         {
-            "Ten world-class musicians rotating across horns, rhythm, and vocals to match any event footprint.",
-            "Fly-in ready, bringing utmost professionalism and engaging energy.",
+            "Unique lineup of ten world-class musicians with flexibility.",
+            "Fly-in ready, bringing professionalism and engaging energy.",
             "Gilbert Ernest anchors with charismatic emceeing, custom medleys, and on-the-fly shaping of the crowd.",
         };
 
         SpotlightFacts = new List<SpotlightFact>
         {
-            new("120+", "International performances over the last five years."),
             new("1-10 Piece", "Configurable lineup covering solo piano through full horn section."),
             new("5+ years ", "From Monaco galas to Singapore rooftop soirées since 2019."),
         };
 
         ShowcaseImages = new List<ShowcaseImage>
         {
-            new("/images/about-stage.svg", "Swing The Boogie playing a roaring theatre"),
-            new("/images/about-duo.svg", "Gilbert Ernest with a vocalist in an intimate lounge"),
+            new("https://d2r0vyil5uhr44.cloudfront.net/images/15_web.jpg", "Gilbert Ernest leads Swing The Boogie on a glowing ballroom stage."),
         };
     }
 
