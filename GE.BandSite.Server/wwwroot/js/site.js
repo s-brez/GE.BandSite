@@ -68,6 +68,7 @@
     const playControl = document.querySelector('.hero__control--play');
     let userPaused = false;
     let autoPaused = false;
+    let userMutedPreference = heroVideo.muted;
 
     const updateMuteUI = () => {
         if (!muteControl) {
@@ -91,6 +92,13 @@
         playControl.setAttribute('aria-label', playing ? 'Pause video' : 'Play video');
     };
 
+    const restoreAudioToPreference = () => {
+        if (!userMutedPreference && heroVideo.muted) {
+            heroVideo.muted = false;
+            updateMuteUI();
+        }
+    };
+
     const playVideo = (options) => {
         const { fromUser = false, allowMutedFallback = false } = options ?? {};
         const promise = heroVideo.play();
@@ -100,6 +108,8 @@
                     userPaused = false;
                 }
                 autoPaused = false;
+                restoreAudioToPreference();
+                updatePlayUI();
             }).catch(() => {
                 if (allowMutedFallback && !heroVideo.muted) {
                     heroVideo.muted = true;
@@ -109,6 +119,7 @@
                             userPaused = false;
                         }
                         autoPaused = false;
+                        restoreAudioToPreference();
                         updatePlayUI();
                     }).catch(() => {
                         updatePlayUI();
@@ -124,6 +135,7 @@
         }
 
         autoPaused = false;
+        restoreAudioToPreference();
         updatePlayUI();
     };
 
@@ -139,6 +151,7 @@
     const toggleMute = () => {
         heroVideo.muted = !heroVideo.muted;
         updateMuteUI();
+        userMutedPreference = heroVideo.muted;
         if (!heroVideo.muted && heroVideo.paused && !userPaused) {
             playVideo({ allowMutedFallback: false });
         }
@@ -186,6 +199,7 @@
                         autoPaused = true;
                     }
                 } else if (autoPaused && !userPaused) {
+                    restoreAudioToPreference();
                     playVideo({ allowMutedFallback: true });
                     autoPaused = false;
                 }
@@ -200,12 +214,14 @@
             pauseVideo({ fromUser: false });
             autoPaused = true;
         } else if (document.visibilityState === 'visible' && autoPaused && !userPaused) {
+            restoreAudioToPreference();
             playVideo({ allowMutedFallback: true });
             autoPaused = false;
         }
     });
 
     heroVideo.muted = false;
+    userMutedPreference = heroVideo.muted;
     updateMuteUI();
     updatePlayUI();
     playVideo({ allowMutedFallback: true });
@@ -217,10 +233,38 @@
         return;
     }
 
+    const highlightVideoFrame = highlightVideo.closest('.highlight-video__frame');
+    const highlightPlayOverlay = highlightVideoFrame ? highlightVideoFrame.querySelector('.highlight-video__play-overlay') : null;
+
+    const updateHighlightVideoState = () => {
+        if (!highlightVideoFrame) {
+            return;
+        }
+
+        const playing = !highlightVideo.paused && !highlightVideo.ended;
+        highlightVideoFrame.dataset.playing = String(playing);
+    };
+
+    if (highlightPlayOverlay) {
+        highlightPlayOverlay.addEventListener('click', () => {
+            const promise = highlightVideo.play();
+            if (promise && typeof promise.then === 'function') {
+                promise.catch(() => {
+                    updateHighlightVideoState();
+                });
+            }
+        });
+    }
+
+    highlightVideo.addEventListener('play', updateHighlightVideoState);
+    highlightVideo.addEventListener('pause', updateHighlightVideoState);
+    highlightVideo.addEventListener('ended', updateHighlightVideoState);
+
     const pauseHighlightVideo = () => {
         if (!highlightVideo.paused) {
             highlightVideo.pause();
         }
+        updateHighlightVideoState();
     };
 
     if ('IntersectionObserver' in window) {
@@ -244,4 +288,6 @@
             pauseHighlightVideo();
         }
     });
+
+    updateHighlightVideoState();
 })();

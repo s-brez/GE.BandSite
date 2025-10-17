@@ -58,7 +58,13 @@
 
 <section class="highlight-video" aria-label="@Model.HighlightVideoTitle">
     <div class="highlight-video__media">
-        <div class="highlight-video__frame">
+        <div class="highlight-video__frame" data-playing="false">
+            <button type="button" class="highlight-video__play-overlay" aria-label="Play highlight video">
+                <svg class="highlight-video__play-overlay-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                    <path d="M24 18v28l24-14-24-14Z" />
+                    <path d="M32 60C17.664 60 6 48.336 6 34S17.664 8 32 8s26 11.664 26 26-11.664 26-26 26Zm0-48C19.215 12 10 21.215 10 34s9.215 22 22 22 22-9.215 22-22S44.785 12 32 12Z" />
+                </svg>
+            </button>
             <video class="highlight-video__player" controls loop preload="metadata" poster="@(Model.HighlightVideo?.PosterUrl ?? Url.Content("~/images/highlight-video-placeholder.jpg"))">
                 <source src="@Model.HighlightVideo?.Url" type="@Model.HighlightVideoMimeType" />
                 Your browser does not support the video tag.

@@ -626,6 +626,40 @@ a:focus {
     gap: 24px;
 }
 
+.highlight-video__play-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55));
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 180ms ease, transform 180ms ease;
+    color: var(--color-text-primary);
+}
+
+.highlight-video__play-overlay:hover {
+    transform: scale(1.02);
+}
+
+.highlight-video__play-overlay:focus-visible {
+    outline: 3px solid var(--color-gold-tint-28);
+    outline-offset: 6px;
+}
+
+.highlight-video__play-overlay-icon {
+    width: clamp(64px, 12vw, 96px);
+    height: clamp(64px, 12vw, 96px);
+    fill: rgba(245, 245, 245, 0.92);
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
+}
+
+.highlight-video__frame[data-playing="true"] .highlight-video__play-overlay {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .highlight-video__gallery {
     display: grid;
     gap: 16px;
