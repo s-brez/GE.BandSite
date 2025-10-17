@@ -157,7 +157,7 @@ a:focus {
 .brand__title {
     font-family: 'Malvides', var(--font-display);
     font-style: italic;
-    font-size: 1.1rem;
+    font-size: 1.5125rem;
     letter-spacing: 0.1em;
 }
 
@@ -374,7 +374,7 @@ a:focus {
     z-index: 1;
     width: 100%;
     max-width: var(--max-width-content);
-    padding: 96px 24px 128px;
+    padding: 40px 24px 96px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -395,7 +395,7 @@ a:focus {
 
 .hero__title {
     font-family: 'Malvides', var(--font-display);
-    font-size: clamp(2.2rem, 7vw, 3.6rem);
+    font-size: clamp(2.7rem, 9vw, 4.4rem);
     letter-spacing: 0.06em;
     line-height: 1.1;
     font-style: italic;
@@ -482,7 +482,7 @@ a:focus {
     .hero__overlay {
         align-items: center;
         text-align: center;
-        padding: 120px 20px 112px;
+        padding: 88px 20px 96px;
     }
 
     .hero__overlay > * {
@@ -1885,7 +1885,26 @@ body.media-lightbox-open {
     font-family: 'Malvides', var(--font-display);
     font-style: italic;
     letter-spacing: 0.12em;
-    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+    color: var(--color-text-primary);
+    font-size: 2.6rem;
+}
+
+.site-footer__title-word {
+    display: block;
+    line-height: 1.1;
+}
+
+.site-footer__title-word--primary {
+    font-size: 3rem;
+}
+
+.site-footer__title-word--secondary {
+    font-size: 2.6rem;
 }
 
 .site-footer__copy {
@@ -2010,7 +2029,7 @@ body.media-lightbox-open {
 
 @media (min-width: 900px) {
     .hero__overlay {
-        padding: 140px 32px 160px;
+        padding: 104px 32px 128px;
     }
 
     .hero__lead {

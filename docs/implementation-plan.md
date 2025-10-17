@@ -147,3 +147,8 @@
     - Uploaded `.mov` assets yield published `.mp4` playback keys with duration metadata and posters.
     - Public pages exclusively reference MP4 URLs; hero fallback video is MP4 and plays in modern browsers.
     - Automated tests and manual runs confirm end-to-end processing, S3 delivery, and browser playback.
+
+- [x] Minor UI polish
+  - Enlarge header brand and hero titles for improved hierarchy.
+  - Stack footer logo text with centered lines and refreshed color treatment.
+  - Lift hero overlay higher in the frame for stronger above-the-fold impact.
