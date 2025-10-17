@@ -87,17 +87,6 @@
                 </select>
                 <span class="validation-message" asp-validation-for="Input.PreferredBandSize"></span>
             </div>
-            <div class="form-field">
-                <label asp-for="Input.BudgetRange"></label>
-                <select asp-for="Input.BudgetRange" required>
-                    <option value="">Select range</option>
-                    @foreach (var option in Model.FormDefinition.BudgetRanges)
-                    {
-                        <option value="@option.Value">@option.Label</option>
-                    }
-                </select>
-                <span class="validation-message" asp-validation-for="Input.BudgetRange"></span>
-            </div>
             <div class="form-field form-field--full">
                 <label asp-for="Input.Message"></label>
                 <textarea asp-for="Input.Message" rows="4" placeholder="Share run-sheet goals, special songs, or production notes"></textarea>

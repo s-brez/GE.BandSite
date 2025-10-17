@@ -80,7 +80,6 @@ public class ContactSubmissionIntegrationTests
             ["Input.EventTimezone"] = "Australia/Sydney",
             ["Input.Location"] = "Chicago, IL",
             ["Input.PreferredBandSize"] = "10-Piece",
-            ["Input.BudgetRange"] = "40k+",
             ["Input.Message"] = "Need horn feature for award reveal."
         };
 
@@ -97,6 +96,7 @@ public class ContactSubmissionIntegrationTests
             Assert.That(stored.EventType, Is.EqualTo("Corporate Event"));
             Assert.That(stored.EventDate, Is.EqualTo(LocalDate.FromDateTime(eventDateTime.Date)));
             Assert.That(stored.EventTimezone, Is.EqualTo("Australia/Sydney"));
+            Assert.That(stored.BudgetRange, Is.EqualTo(ContactSubmissionDefaults.BudgetRangePlaceholder));
         });
 
         Assert.That(_factory.SesClient.Requests, Has.Count.EqualTo(1));
@@ -138,8 +138,7 @@ public class ContactSubmissionIntegrationTests
             ["Input.OrganizerName"] = "Jordan Hart",
             ["Input.OrganizerEmail"] = "jordan@example.com",
             ["Input.EventType"] = "Corporate Event",
-            ["Input.PreferredBandSize"] = "10-Piece",
-            ["Input.BudgetRange"] = "40k+"
+            ["Input.PreferredBandSize"] = "10-Piece"
         }));
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Redirect));

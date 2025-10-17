@@ -110,13 +110,6 @@ public class IndexModel : PageModel
                 new("5-Piece", "5-Piece"),
                 new("10-Piece", "10-Piece"),
             },
-            new List<SelectOption>
-            {
-                new("Under 10k", "Under $10k"),
-                new("10k-20k", "$10k - $20k"),
-                new("20k-40k", "$20k - $40k"),
-                new("40k+", "$40k+"),
-            },
             BuildTimeZoneOptions());
 
         FaqEntries = new List<FaqItem>
@@ -216,7 +209,7 @@ public class IndexModel : PageModel
             Input.EventTimezone,
             Input.Location,
             Input.PreferredBandSize!,
-            Input.BudgetRange!,
+            ContactSubmissionDefaults.BudgetRangePlaceholder,
             Input.Message);
     }
 
@@ -310,11 +303,9 @@ public class IndexModel : PageModel
     public sealed record ContactFormDefinition(
         IReadOnlyList<SelectOption> EventTypes,
         IReadOnlyList<SelectOption> BandSizes,
-        IReadOnlyList<SelectOption> BudgetRanges,
         IReadOnlyList<SelectOption> TimeZones)
     {
         public static ContactFormDefinition Empty { get; } = new(
-            Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>(),
             Array.Empty<SelectOption>());
@@ -356,10 +347,6 @@ public class IndexModel : PageModel
         [Required]
         [Display(Name = "Preferred band size")]
         public string? PreferredBandSize { get; set; }
-
-        [Required]
-        [Display(Name = "Budget range")]
-        public string? BudgetRange { get; set; }
 
         [Display(Name = "Tell us about your vision")]
         [StringLength(2000)]

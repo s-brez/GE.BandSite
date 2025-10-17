@@ -111,7 +111,6 @@ public sealed class ContactSubmissionSesLiveTests
             ["Input.EventTimezone"] = "Etc/UTC",
             ["Input.Location"] = "Test Lab",
             ["Input.PreferredBandSize"] = "Full Band",
-            ["Input.BudgetRange"] = "Confidential",
             ["Input.Message"] = "Automated test submission to verify SES delivery."
         };
 
@@ -130,6 +129,7 @@ public sealed class ContactSubmissionSesLiveTests
             Assert.That(stored.OrganizerEmail, Is.EqualTo("integration-test@swingtheboogie.com"));
             Assert.That(stored.EventDate, Is.EqualTo(LocalDate.FromDateTime(eventDateTime.Date)));
             Assert.That(stored.EventTimezone, Is.EqualTo("Etc/UTC"));
+            Assert.That(stored.BudgetRange, Is.EqualTo(ContactSubmissionDefaults.BudgetRangePlaceholder));
         });
 
         var sesClient = _factory.RecordingClient ?? throw new InvalidOperationException("SES client recorder was not initialized.");
