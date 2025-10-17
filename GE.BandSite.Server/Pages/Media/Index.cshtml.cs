@@ -31,8 +31,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "Watch the dance floor ignite.";
-        HeroLead = "Check out Swing the Boogie in action.";
+        HeroTitle = "";
+        HeroLead = "Photos and videos of Swing The Boogie in action – the packed dancefloors, the timeless suits, the splash of red that defines our brand.";
 
         var gallery = await _mediaQueryService.GetGalleryAsync().ConfigureAwait(false);
 

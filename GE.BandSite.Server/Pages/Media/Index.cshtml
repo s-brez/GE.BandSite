@@ -5,35 +5,15 @@
 }
 
 <div class="page">
-    <section class="page__section media-hero">
+    <section class="page__section media-hero" style="padding-top: 40px">
         <div class="media-hero__copy">
-            <p class="page-eyebrow">Media</p>
-            <h1 class="page-title">@Model.HeroTitle</h1>
+            <p class="page-eyebrow"></p>
+            <h1 class="page-title">Media</h1>
             <p class="page-lead">@Model.HeroLead</p>
-        </div>
-        <div class="media-hero__video">
-            @if (Model.FeaturedVideo is not null)
-            {
-                <video class="media-video" controls preload="metadata" poster="@Model.FeaturedVideo.PosterUrl">
-                    <source src="@Model.FeaturedVideo.Url" type="video/mp4" />
-                    Your browser does not support the video tag.
-                </video>
-                <div class="media-video__caption">
-                    <h2>@Model.FeaturedVideo.Title</h2>
-                    <p>@Model.FeaturedVideo.Description</p>
-                </div>
-            }
-            else
-            {
-                <div class="media-video__placeholder">Media highlight coming soon.</div>
-            }
         </div>
     </section>
 
     <section class="page__section media-gallery">
-        <div class="section-heading">
-            <h2 class="section-heading__title">Photo highlights</h2>
-        </div>
         <div class="media-gallery__grid">
             @foreach (var photo in Model.PhotoGallery)
             {
