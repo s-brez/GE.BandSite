@@ -43,7 +43,7 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        HeroTitle = "The World-Class Swing Band That Brings the Vibe.";
+        HeroTitle = "The World-Class Swing Band Bringing the Vibe to your Event.";
         HeroLeadCopy = "From intimate weddings to global stages, Swing The Boogie delivers unforgettable live music.";
         CallToActionText = "Book Your Event";
 

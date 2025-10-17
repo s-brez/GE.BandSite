@@ -1,5 +1,6 @@
 @{
     var currentPage = (string?)ViewContext.RouteData.Values["page"] ?? string.Empty;
+    var renderSkipLink = !string.Equals(currentPage, "/Index", System.StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +12,10 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="site-body">
-    <a class="skip-link" href="#main-content">Skip to content</a>
+    @if (renderSkipLink)
+    {
+        <a class="skip-link" href="#main-content">Skip to content</a>
+    }
     <header class="site-header">
         <div class="site-header__inner">
             <span class="brand" asp-page="/Index" aria-label="Swing The Boogie home">
