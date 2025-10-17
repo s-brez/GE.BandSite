@@ -32,7 +32,7 @@ Set-Service ssh-agent -StartupType Automatic
 Start-Service ssh-agent
 ssh-add $env:USERPROFILE\.ssh\ge_band_site.pem
 
-./scripts/deploy.ps1 -HostName ec2-3-26-71-203.ap-southeast-2.compute.amazonaws.com
+./scripts/deploy.ps1 -HostName ec2-54-252-145-156.ap-southeast-2.compute.amazonaws.com
 ```
 
 ## Monitor app logs
