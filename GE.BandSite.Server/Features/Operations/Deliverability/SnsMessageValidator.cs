@@ -215,12 +215,14 @@ public sealed class SnsMessageValidator : ISnsMessageValidator
             return false;
         }
 
-        if (!uri.Host.EndsWith(".amazonaws.com", StringComparison.OrdinalIgnoreCase))
+        var host = uri.Host;
+        if (!host.EndsWith(".amazonaws.com", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        if (!uri.Host.Contains(".sns.", StringComparison.OrdinalIgnoreCase))
+        if (!host.StartsWith("sns.", StringComparison.OrdinalIgnoreCase) &&
+            !host.Contains(".sns.", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

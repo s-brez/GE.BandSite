@@ -65,7 +65,8 @@ public sealed class SesNotificationsControllerTests
 
         var result = await controller.PostAsync(CancellationToken.None);
 
-        Assert.That(result, Is.InstanceOf<ForbidResult>());
+        Assert.That(result, Is.InstanceOf<StatusCodeResult>());
+        Assert.That(((StatusCodeResult)result).StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
     }
 
     private sealed class NullProcessor : ISesNotificationProcessor

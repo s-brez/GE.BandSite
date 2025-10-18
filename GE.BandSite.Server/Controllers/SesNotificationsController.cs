@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GE.BandSite.Server.Features.Operations.Deliverability;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -83,7 +84,7 @@ public sealed class SesNotificationsController : ControllerBase
         var isValid = await _validator.ValidateAsync(envelope, cancellationToken).ConfigureAwait(false);
         if (!isValid)
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         var messageType = envelope.Type?.Trim();
@@ -110,7 +111,7 @@ public sealed class SesNotificationsController : ControllerBase
             if (_options.RequireTopicValidation && !IsTopicAllowed(envelope.TopicArn))
             {
                 _logger.LogWarning("SNS notification from TopicArn {TopicArn} rejected because it is not in the allowed list.", envelope.TopicArn);
-                return Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
 
             SesNotificationMessage? notification;
