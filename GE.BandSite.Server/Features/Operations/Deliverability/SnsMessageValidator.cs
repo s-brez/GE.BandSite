@@ -80,20 +80,47 @@ public sealed class SnsMessageValidator : ISnsMessageValidator
         }
 
         var data = Encoding.UTF8.GetBytes(stringToSign);
-        using var rsa = certificate.GetRSAPublicKey();
+        RSA? rsa = null;
+        try
+        {
+            rsa = certificate.GetRSAPublicKey();
+        }
+        catch (CryptographicException exception)
+        {
+            _logger.LogWarning(exception, "SNS message rejected because certificate did not expose a usable RSA public key.");
+            return false;
+        }
+        catch (PlatformNotSupportedException exception)
+        {
+            _logger.LogWarning(exception, "SNS message rejected because RSA public key retrieval is not supported on this platform.");
+            return false;
+        }
+
         if (rsa == null)
         {
             _logger.LogWarning("SNS message rejected because certificate did not contain an RSA public key.");
             return false;
         }
 
-        var verified = rsa.VerifyData(data, signatureBytes, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
-        if (!verified)
+        try
         {
-            _logger.LogWarning("SNS message rejected because signature verification failed.");
-        }
+            var verified = rsa.VerifyData(data, signatureBytes, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
+            if (!verified)
+            {
+                _logger.LogWarning("SNS message rejected because signature verification failed.");
+            }
 
-        return verified;
+            return verified;
+        }
+        catch (CryptographicException exception)
+        {
+            _logger.LogWarning(exception, "SNS message rejected because signature verification threw an exception.");
+            return false;
+        }
+        finally
+        {
+            rsa?.Dispose();
+        }
     }
 
     private async Task<X509Certificate2?> GetCertificateAsync(Uri uri, CancellationToken cancellationToken)
