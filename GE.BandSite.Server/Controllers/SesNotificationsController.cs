@@ -232,7 +232,13 @@ public sealed class SesNotificationsController : ControllerBase
             return false;
         }
 
-        return uri.Host.EndsWith(".amazonaws.com", StringComparison.OrdinalIgnoreCase)
-               && uri.Host.Contains(".sns.", StringComparison.OrdinalIgnoreCase);
+        var host = uri.Host;
+        if (!host.EndsWith(".amazonaws.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return host.StartsWith("sns.", StringComparison.OrdinalIgnoreCase)
+               || host.Contains(".sns.", StringComparison.OrdinalIgnoreCase);
     }
 }
